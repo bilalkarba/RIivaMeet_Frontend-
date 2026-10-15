@@ -1,0 +1,94 @@
+<app-auth-layout>
+  <div class="stack stack-5">
+    <header class="stack stack-2">
+      <h1 class="display-3">{{ 'auth.login.title' | t }}</h1>
+      <p class="lead">{{ 'auth.login.subtitle' | t }}</p>
+    </header>
+
+    @if (errorKey(); as key) {
+      <div class="alert alert--error" role="alert">
+        <app-icon name="alert" [size]="17" />
+        <span>{{ key | t }}</span>
+      </div>
+    }
+
+    <form class="stack stack-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label class="label" for="login-email">{{ 'auth.login.email' | t }}</label>
+        <input
+          id="login-email"
+          class="input"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          inputmode="email"
+          dir="ltr"
+          [attr.aria-invalid]="emailError() !== null"
+          [attr.aria-describedby]="emailError() ? 'login-email-error' : null"
+        />
+        @if (emailError(); as key) {
+          <p class="field-error" id="login-email-error">{{ key | t }}</p>
+        } @else if (serverError('email'); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="login-password">{{ 'auth.login.password' | t }}</label>
+        <div class="input-group">
+          <input
+            id="login-password"
+            class="input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            dir="ltr"
+            [attr.aria-invalid]="passwordError() !== null"
+            [attr.aria-describedby]="passwordError() ? 'login-password-error' : null"
+          />
+          <button
+            type="button"
+            class="btn btn--outline btn--icon"
+            [attr.aria-pressed]="showPassword()"
+            [attr.aria-label]="'auth.login.password' | t"
+            (click)="togglePassword()"
+          >
+            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="17" />
+          </button>
+        </div>
+        @if (passwordError(); as key) {
+          <p class="field-error" id="login-password-error">{{ key | t }}</p>
+        } @else if (serverError('password'); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block" [disabled]="auth.isBusy()">
+        {{ (auth.isBusy() ? 'auth.login.submitting' : 'auth.login.submit') | t }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      {{ 'auth.login.noAccount' | t }}
+      <a routerLink="/register">{{ 'auth.login.createAccount' | t }}</a>
+    </p>
+
+    @if (showDevHints) {
+      <aside class="demo">
+        <p class="demo__title">
+          <app-icon name="info" [size]="14" />
+          {{ 'auth.login.demoTitle' | t }}
+        </p>
+        <p class="demo__text">{{ 'auth.login.demoText' | t }}</p>
+        <div class="row">
+          <button type="button" class="btn btn--outline btn--sm" (click)="fillDemo('client')">
+            {{ 'auth.login.demoFill' | t }}
+          </button>
+          <button type="button" class="btn btn--outline btn--sm" (click)="fillDemo('coach')">
+            {{ 'auth.login.demoFillCoach' | t }}
+          </button>
+        </div>
+      </aside>
+    }
+  </div>
+</app-auth-layout>

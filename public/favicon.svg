@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="RivaMeet">
+  <rect x="0" y="0" width="32" height="32" rx="9" fill="#0b3a55" />
+  <g fill="none" stroke="#7fddee" stroke-width="2" stroke-linecap="round">
+    <path d="M4 9.5q3-3 6 0t6 0t6 0t6 0" />
+    <path d="M4 15q3-3 6 0t6 0t6 0" opacity="0.72" />
+  </g>
+  <circle cx="23.4" cy="23" r="4.7" fill="#ffffff" />
+  <path d="M23.4 20.7l2.3 1.7-.9 2.7h-2.8l-.9-2.7z" fill="#0b3a55" />
+</svg>

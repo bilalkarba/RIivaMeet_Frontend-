@@ -1,0 +1,333 @@
+:host {
+  display: block;
+}
+
+.studio {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 1rem + 2vw, 2rem);
+}
+
+.studio__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.studio__head-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.account__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.account__name {
+  font-size: 1rem;
+}
+
+.account__email {
+  font-size: 0.8rem;
+  color: var(--ink-500);
+  word-break: break-all;
+}
+
+.studio__gate {
+  max-width: 34rem;
+}
+
+.studio__tabs-skeleton {
+  height: 3rem;
+  border-radius: var(--r-pill);
+  max-width: 32rem;
+}
+
+.studio__panel-skeleton {
+  height: 26rem;
+  border-radius: var(--r-lg);
+}
+
+/* --- Tabs ---------------------------------------------------------------- */
+
+.studio__tabs {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  padding: 0.32rem;
+  border-radius: var(--r-pill);
+  background: var(--cream-200);
+  border: 1px solid var(--line);
+  align-self: flex-start;
+}
+
+.studio__tab {
+  padding: 0.52rem 1.1rem;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-700);
+  font-size: 0.89rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.studio__tab:hover {
+  color: var(--forest-800);
+}
+
+.studio__tab.is-active {
+  background: var(--forest-900);
+  color: var(--cream-50);
+}
+
+.studio__tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-inline-start: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: var(--r-pill);
+  background: var(--coral-500);
+  color: white;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.studio__tab.is-active .studio__tab-count {
+  background: var(--cream-50);
+  color: var(--forest-900);
+}
+
+.studio__alerts {
+  margin-bottom: 1.25rem;
+}
+
+.studio__alerts-head {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.studio__alert-list {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.studio__alert-list li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--cream-50);
+}
+
+.studio__alert-list li.studio__alert--unread {
+  border-inline-start: 3px solid var(--lime-500);
+}
+
+.studio__alert-list span,
+.studio__realtime-note {
+  color: var(--ink-500);
+  font-size: 0.86rem;
+}
+
+.studio__realtime-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+/* --- Panels -------------------------------------------------------------- */
+
+.studio__panel {
+  display: block;
+}
+
+.studio__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.25rem, 1rem + 2vw, 2rem);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .studio__grid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+.studio__panel-title {
+  font-size: 1.1rem;
+}
+
+.studio__panel-sub {
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.studio__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.85rem;
+}
+
+.studio__coords {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.95rem 1rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--cream-50);
+}
+
+.studio__actions {
+  gap: 0.6rem;
+}
+
+/* --- Checklist ----------------------------------------------------------- */
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-500);
+}
+
+.checklist__item.is-done {
+  color: var(--green-600);
+  font-weight: 600;
+}
+
+.studio__stat {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--forest-800);
+  line-height: 1;
+}
+
+/* --- Sport picker ------------------------------------------------------- */
+
+.sport-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.sport-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: #fff;
+  cursor: pointer;
+  text-align: start;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+}
+
+.sport-choice:hover {
+  border-color: var(--forest-300);
+}
+
+.sport-choice.is-selected {
+  border-color: var(--forest-600);
+  background: var(--forest-50);
+  box-shadow: 0 0 0 3px rgba(30, 107, 147, 0.1);
+}
+
+.sport-choice__icon {
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: var(--r-sm);
+  background: var(--cream-200);
+  color: var(--forest-700);
+  flex: none;
+}
+
+.sport-choice.is-selected .sport-choice__icon {
+  background: var(--forest-900);
+  color: var(--lime-400);
+}
+
+.sport-choice__name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.sport-choice__count {
+  margin-inline-start: auto;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-400);
+}
+
+/* --- Availability windows ---------------------------------------------- */
+
+.windows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.windows__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--cream-50);
+}
+
+.windows__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-800);
+}

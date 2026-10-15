@@ -1,0 +1,351 @@
+<section class="section section--tight page-head">
+  <div class="shell">
+    <nav class="crumbs" [attr.aria-label]="'nav.home' | t">
+      <a routerLink="/">{{ 'nav.home' | t }}</a>
+      <app-icon name="chevron-right" [size]="14" class="dir-icon" />
+      <a routerLink="/coaches">{{ 'nav.coaches' | t }}</a>
+      <app-icon name="chevron-right" [size]="14" class="dir-icon" />
+      <span aria-current="page">{{ coach()?.name ?? '…' }}</span>
+    </nav>
+  </div>
+</section>
+
+@if (loading()) {
+  <section class="section section--tight">
+    <div class="shell stack stack-5" aria-hidden="true">
+      <div class="skeleton profile-skeleton"></div>
+      <div class="grid grid--3">
+        <div class="skeleton block-skeleton"></div>
+        <div class="skeleton block-skeleton"></div>
+        <div class="skeleton block-skeleton"></div>
+      </div>
+    </div>
+  </section>
+} @else if (error(); as failure) {
+  <section class="section">
+    <div class="shell">
+      @if (failure.status === 404 || failure.code === 'VALIDATION_ERROR') {
+        <app-state-panel
+          kind="empty"
+          iconOverride="search"
+          titleKey="coach.notFoundTitle"
+          messageKey="coach.notFoundMessage"
+          actionKey="coach.backToSearch"
+        >
+          <a class="btn btn--outline btn--sm" routerLink="/coaches">{{ 'coach.backToSearch' | t }}</a>
+        </app-state-panel>
+      } @else {
+        <app-state-panel
+          kind="error"
+          titleKey="errors.title"
+          [messageKey]="failure.isNetworkError ? 'errors.network' : failure.messageKey"
+          [detail]="failure.message"
+          actionKey="common.retry"
+          (action)="retry()"
+        />
+      }
+    </div>
+  </section>
+} @else if (coach(); as profile) {
+  <!-- ===================== PROFILE HERO ===================== -->
+  <section class="profile on-dark">
+    <span class="profile__glow" aria-hidden="true"></span>
+    <div class="shell profile__inner">
+      <span class="profile__avatar">
+        <app-avatar [name]="profile.name" size="xl" [decorative]="true" />
+      </span>
+
+      <div class="profile__body">
+        <div class="profile__title-row">
+          <h1 class="display-2 profile__name">{{ profile.name }}</h1>
+          <span class="chip chip--on-dark">
+            <app-icon name="medal" [size]="14" />
+            {{ locale.enumLabel('level', profile.experienceLevel) }}
+          </span>
+          @if (profile.isPublished) {
+            <span class="chip chip--lime">
+              <app-icon name="shield" [size]="14" />
+              {{ 'common.published' | t }}
+            </span>
+          }
+        </div>
+
+        <p class="profile__location">
+          <app-icon name="map-pin" [size]="16" />
+          <span>{{ profile.neighborhood }}, {{ profile.city }}</span>
+        </p>
+
+        <ul class="profile__sports">
+          @for (sport of profile.sports; track sport.id) {
+            <li class="chip chip--on-dark">
+              <app-icon [name]="sportIconName(sport.slug)" [size]="14" />
+              {{ locale.sportName(sport.slug, sport.name) }}
+            </li>
+          }
+        </ul>
+
+        <div class="profile__meta">
+          <app-rating-stars
+            [value]="profile.averageRating"
+            [count]="profile.reviewCount"
+            [size]="17"
+            [onDark]="true"
+          />
+          @if (profile.totalBookings !== undefined) {
+            <span class="profile__meta-item">
+              <app-icon name="check-circle" [size]="15" />
+              {{ 'common.sessionCount' | t: { count: profile.totalBookings } }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="profile__aside">
+        <p class="profile__price-label">{{ 'coach.hourlyPrice' | t }}</p>
+        <p class="profile__price">
+          {{ locale.formatMoney(profile.hourlyPrice) }}
+          <span class="profile__price-unit">{{ 'common.perHour' | t }}</span>
+        </p>
+        @if (canBook()) {
+          <a class="btn btn--primary btn--block" href="#booking">{{ 'coach.bookingCta' | t }}</a>
+        } @else {
+          <button type="button" class="btn btn--outline-light btn--block" disabled>
+            {{ 'coach.noWindows' | t }}
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DETAIL ===================== -->
+  <section class="section section--tight">
+    <div class="shell detail">
+      <div class="detail__main stack stack-6">
+        <!-- About -->
+        <article class="card card--pad stack stack-3">
+          <h2 class="detail__heading">{{ 'coach.about' | t }}</h2>
+          <p class="detail__bio">{{ profile.bio || ('coach.aboutEmpty' | t) }}</p>
+          @if (profile.address) {
+            <p class="detail__address">
+              <app-icon name="map-pin" [size]="15" />
+              {{ profile.address }}
+            </p>
+          }
+        </article>
+
+        <!-- Availability -->
+        <article class="card card--pad stack stack-3">
+          <div class="row row--between">
+            <h2 class="detail__heading">{{ 'coach.availability' | t }}</h2>
+            <span class="chip chip--neutral">
+              {{ 'coach.availabilityCount' | t: { count: windows().length } }}
+            </span>
+          </div>
+
+          @if (windows().length === 0) {
+            <p class="muted">{{ 'coach.availabilityEmpty' | t }}</p>
+          } @else {
+            <ul class="windows">
+              @for (slot of windows(); track slot.id) {
+                <li class="windows__item">
+                  <app-icon name="calendar" [size]="15" />
+                  <span>{{ locale.formatRange(slot.startAt, slot.endAt) }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </article>
+
+        <!-- Reviews -->
+        <article class="card card--pad stack stack-4" id="reviews">
+          <div class="row row--between">
+            <h2 class="detail__heading">{{ 'coach.reviewsTitle' | t }}</h2>
+            @if (reviewMeta(); as meta) {
+              <span class="chip chip--neutral">
+                <app-icon name="star" [size]="13" />
+                {{ 'common.reviewCount' | t: { count: meta.summary.reviewCount } }}
+              </span>
+            }
+          </div>
+
+          @if (reviewsLoading() && reviewItems().length === 0) {
+            <div class="stack stack-3" aria-hidden="true">
+              @for (placeholder of [1, 2]; track placeholder) {
+                <div class="skeleton review-skeleton"></div>
+              }
+            </div>
+          } @else if (reviewItems().length === 0) {
+            <p class="muted">{{ 'coach.reviewsEmpty' | t }}</p>
+          } @else {
+            <ul class="reviews">
+              @for (review of reviewItems(); track review.id) {
+                <li class="review">
+                  <app-avatar [name]="review.client.name" size="sm" [decorative]="true" />
+                  <div class="review__body">
+                    <div class="review__head">
+                      <strong class="review__name">{{ review.client.name }}</strong>
+                      <app-rating-stars [value]="review.rating" [showValue]="false" [count]="null" />
+                      <span class="review__date">{{ locale.formatDate(review.createdAt) }}</span>
+                    </div>
+                    @if (review.comment) {
+                      <p class="review__comment">{{ review.comment }}</p>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+
+            @if (reviewPages() > 1) {
+              <nav class="pagination" [attr.aria-label]="'coach.reviewsTitle' | t">
+                <button
+                  type="button"
+                  class="pagination__step"
+                  [attr.aria-label]="'search.prevPage' | t"
+                  [disabled]="reviewsPage() <= 1"
+                  (click)="loadReviews(reviewsPage() - 1)"
+                >
+                  <app-icon name="chevron-left" [size]="16" class="dir-icon" />
+                </button>
+                <span class="pagination__status">
+                  {{ 'common.page' | t }} {{ locale.formatNumber(reviewsPage()) }} {{ 'common.of' | t }}
+                  {{ locale.formatNumber(reviewPages()) }}
+                </span>
+                <button
+                  type="button"
+                  class="pagination__step"
+                  [attr.aria-label]="'search.nextPage' | t"
+                  [disabled]="reviewsPage() >= reviewPages()"
+                  (click)="loadReviews(reviewsPage() + 1)"
+                >
+                  <app-icon name="chevron-right" [size]="16" class="dir-icon" />
+                </button>
+              </nav>
+            }
+          }
+        </article>
+      </div>
+
+      <!-- ---------------- Booking ---------------- -->
+      <aside class="detail__aside" id="booking">
+        <div class="card card--pad booking stack stack-4">
+          <div class="stack stack-2">
+            <h2 class="detail__heading">{{ 'coach.bookTitle' | t }}</h2>
+            <p class="muted booking__subtitle">{{ 'coach.bookSubtitle' | t }}</p>
+          </div>
+
+          @if (!auth.isAuthenticated()) {
+            <div class="alert alert--info stack stack-2">
+              <strong>{{ 'coach.signInTitle' | t }}</strong>
+              <span>{{ 'coach.signInMessage' | t }}</span>
+            </div>
+            <a
+              class="btn btn--primary btn--block"
+              routerLink="/login"
+              [queryParams]="{ returnUrl: '/coaches/' + profile.id }"
+            >
+              {{ 'coach.signInCta' | t }}
+            </a>
+          } @else if (!auth.isClient()) {
+            <div class="alert alert--warning stack stack-2">
+              <strong>{{ 'coach.coachAccountTitle' | t }}</strong>
+              <span>{{ 'coach.coachAccountMessage' | t }}</span>
+            </div>
+          } @else if (windows().length === 0) {
+            <div class="alert alert--info">{{ 'coach.noWindows' | t }}</div>
+          } @else {
+            <div class="field">
+              <label class="label" for="booking-window">{{ 'coach.selectWindow' | t }}</label>
+              <select
+                id="booking-window"
+                class="select"
+                [value]="selectedWindowId() ?? ''"
+                (change)="selectWindow($any($event.target).value)"
+              >
+                @for (slot of windows(); track slot.id) {
+                  <option [value]="slot.id">{{ locale.formatRange(slot.startAt, slot.endAt) }}</option>
+                }
+              </select>
+            </div>
+
+            <fieldset class="booking__group">
+              <legend class="label">{{ 'coach.startTime' | t }}</legend>
+              @if (startOptions().length === 0) {
+                <p class="field-hint">{{ 'coach.noWindows' | t }}</p>
+              } @else {
+                <div class="booking__chips">
+                  @for (option of startOptions(); track option) {
+                    <button
+                      type="button"
+                      class="chip booking__chip"
+                      [class.chip--lime]="selectedStart() === option"
+                      [attr.aria-pressed]="selectedStart() === option"
+                      (click)="selectStart(option)"
+                    >
+                      {{ locale.formatTime(option) }}
+                    </button>
+                  }
+                </div>
+              }
+            </fieldset>
+
+            <fieldset class="booking__group">
+              <legend class="label">{{ 'coach.duration' | t }}</legend>
+              <div class="booking__chips">
+                @for (option of durationOptions(); track option) {
+                  <button
+                    type="button"
+                    class="chip booking__chip"
+                    [class.chip--lime]="duration() === option"
+                    [attr.aria-pressed]="duration() === option"
+                    (click)="selectDuration(option)"
+                  >
+                    {{ 'coach.durationOption' | t: { count: option } }}
+                  </button>
+                }
+              </div>
+            </fieldset>
+
+            <div class="booking__total">
+              <span class="muted">{{ 'coach.priceEstimate' | t }}</span>
+              <strong>{{ estimatedTotal() ?? '—' }}</strong>
+            </div>
+
+            @if (bookingError(); as failure) {
+              <div class="alert alert--error stack stack-2" role="alert">
+                <strong>{{ 'coach.errorTitle' | t }}</strong>
+                <span>{{ failure.messageKey | t }}</span>
+                <span class="booking__detail">{{ failure.message }}</span>
+              </div>
+            }
+
+            @if (bookingSent()) {
+              <div class="alert alert--success stack stack-2" role="status">
+                <strong>{{ 'coach.requestSentTitle' | t }}</strong>
+                <span>{{ 'coach.requestSentMessage' | t }}</span>
+              </div>
+              <a class="btn btn--dark btn--block" routerLink="/dashboard">
+                {{ 'coach.goToBookings' | t }}
+              </a>
+            } @else {
+              <button
+                type="button"
+                class="btn btn--primary btn--block"
+                [disabled]="!canBook() || sending()"
+                (click)="submit()"
+              >
+                @if (sending()) {
+                  {{ 'coach.submitting' | t }}
+                } @else {
+                  {{ 'coach.submit' | t }}
+                  <app-icon name="arrow-right" [size]="16" class="dir-icon" />
+                }
+              </button>
+            }
+
+            <p class="booking__note">{{ 'coach.priceNote' | t }}</p>
+          }
+        </div>
+      </aside>
+    </div>
+  </section>
+}

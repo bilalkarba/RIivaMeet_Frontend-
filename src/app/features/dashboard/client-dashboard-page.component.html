@@ -1,0 +1,55 @@
+<section class="section section--tight">
+  <div class="shell dashboard">
+    <!-- ---------------- Account ---------------- -->
+    <aside class="dashboard__aside stack stack-4">
+      <div class="card card--pad stack stack-3">
+        <div class="account">
+          <app-avatar [name]="auth.user()?.name ?? ''" size="lg" [decorative]="true" />
+          <div class="account__text">
+            <span class="account__label">{{ 'dashboard.profileTitle' | t }}</span>
+            <strong class="account__name">{{ auth.user()?.name }}</strong>
+            <span class="account__email">{{ auth.user()?.email }}</span>
+          </div>
+        </div>
+
+        <span class="chip chip--neutral">{{ locale.enumLabel('role', auth.user()?.role) }}</span>
+
+        <div class="stack stack-2">
+          <a class="btn btn--primary btn--block" routerLink="/coaches">
+            <app-icon name="search" [size]="16" />
+            {{ 'dashboard.browseCoaches' | t }}
+          </a>
+          <button type="button" class="btn btn--outline btn--block" (click)="logout()">
+            <app-icon name="log-out" [size]="16" />
+            {{ 'nav.logout' | t }}
+          </button>
+        </div>
+      </div>
+
+      <div class="alert alert--info">
+        <app-icon name="info" [size]="16" />
+        <span>{{ 'booking.cannotReview' | t }}</span>
+      </div>
+
+      @if (!auth.user()?.hasCoachProfile) {
+        <div class="card card--pad stack stack-3">
+          <strong>{{ 'coachDash.notCoachTitle' | t }}</strong>
+          <p class="muted account__hint">{{ 'coachDash.notCoachMessage' | t }}</p>
+          <a class="btn btn--outline btn--block" routerLink="/register" [queryParams]="{ role: 'COACH' }">
+            {{ 'coachDash.becomeCoach' | t }}
+          </a>
+        </div>
+      }
+    </aside>
+
+    <!-- ---------------- Bookings ---------------- -->
+    <div class="dashboard__main stack stack-4">
+      <header class="stack stack-2">
+        <h1 class="display-2">{{ 'dashboard.title' | t }}</h1>
+        <p class="lead">{{ 'dashboard.subtitle' | t }}</p>
+      </header>
+
+      <app-booking-list view="client" />
+    </div>
+  </div>
+</section>

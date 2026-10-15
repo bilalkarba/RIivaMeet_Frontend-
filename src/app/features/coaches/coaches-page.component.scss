@@ -1,0 +1,220 @@
+:host {
+  display: block;
+}
+
+.page-head {
+  background: var(--cream-50);
+  border-block-end: 1px solid var(--line);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--ink-500);
+  margin-block-end: 0.9rem;
+}
+
+.crumbs a:hover {
+  color: var(--forest-700);
+  text-decoration: underline;
+}
+
+.page-head__row {
+  display: grid;
+  gap: clamp(1.25rem, 1rem + 2vw, 2.25rem);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .page-head__row {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: center;
+  }
+}
+
+/* --- Layout -------------------------------------------------------------- */
+
+.results__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.25rem, 1rem + 2vw, 2rem);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .results__layout {
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
+}
+
+/* --- Filters ------------------------------------------------------------- */
+
+.filters {
+  display: none;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  inset-block-start: calc(var(--header-h) + 1rem);
+  overflow: hidden;
+}
+
+.filters.is-open {
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .filters {
+    display: block;
+  }
+
+  .filters__close {
+    display: none;
+  }
+
+  .filters__toggle {
+    display: none;
+  }
+}
+
+.filters__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-block-end: 1px solid var(--line);
+  background: var(--cream-50);
+}
+
+.filters__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+}
+
+.filters__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding: 1.1rem;
+}
+
+.filters__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filters__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.filters__ratings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filters__rating {
+  cursor: pointer;
+}
+
+.filters__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--ink-400);
+  line-height: 1.5;
+}
+
+/* --- Results ------------------------------------------------------------- */
+
+.results__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.results__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.results__count {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink-700);
+}
+
+.results__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card--placeholder {
+  min-height: 21rem;
+  border-radius: var(--r-lg);
+}
+
+/* --- Pagination ---------------------------------------------------------- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-block-start: 0.5rem;
+}
+
+.pagination__page,
+.pagination__step {
+  display: grid;
+  place-items: center;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  padding: 0 0.5rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--ink-800);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.pagination__page:hover:not(.is-active),
+.pagination__step:hover:not(:disabled) {
+  border-color: var(--forest-600);
+  color: var(--forest-800);
+}
+
+.pagination__page.is-active {
+  background: var(--forest-900);
+  border-color: var(--forest-900);
+  color: var(--cream-50);
+}
+
+.pagination__step:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}

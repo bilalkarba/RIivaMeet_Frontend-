@@ -1,0 +1,246 @@
+<!-- ===================== HERO ===================== -->
+<section class="hero on-dark">
+  <span class="hero__glow" aria-hidden="true"></span>
+
+  <div class="shell hero__inner">
+    <div class="hero__content">
+      <p class="eyebrow hero__badge">
+        <app-icon name="shield" [size]="15" />
+        {{ 'home.hero.badge' | t }}
+      </p>
+
+      <h1 class="display-1 hero__title">
+        {{ 'home.hero.title' | t }}
+        <span class="hero__title-accent">{{ 'home.hero.titleAccent' | t }}</span>
+      </h1>
+
+      <p class="lead hero__subtitle">{{ 'home.hero.subtitle' | t }}</p>
+
+      <div class="hero__search">
+        <h2 class="hero__search-title">{{ 'home.hero.searchTitle' | t }}</h2>
+        <app-search-form variant="hero" [sports]="sports()" (submitted)="onSearch($event)" />
+      </div>
+
+      <ul class="hero__stats">
+        <li class="hero__stat">
+          <span class="hero__stat-value">
+            {{ totalCoaches() === null ? '—' : locale.formatNumber(totalCoaches()!) }}
+          </span>
+          <span class="hero__stat-label">{{ 'home.stats.coaches' | t }}</span>
+        </li>
+        <li class="hero__stat">
+          <span class="hero__stat-value">{{ sports().length === 0 ? '—' : locale.formatNumber(sports().length) }}</span>
+          <span class="hero__stat-label">{{ 'home.stats.sports' | t }}</span>
+        </li>
+        <li class="hero__stat hero__stat--feature">
+          <app-icon name="check-circle" [size]="17" />
+          <span class="hero__stat-label">{{ 'home.stats.instant' | t }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero__media" aria-hidden="true">
+      <span class="hero__photo hero__photo--main">
+        <app-smart-image [src]="media.heroPortrait" [alt]="''" ratio="4 / 5" tone="forest" />
+      </span>
+      <span class="hero__photo hero__photo--side">
+        <app-smart-image [src]="media.heroAction" [alt]="''" ratio="1 / 1" tone="sky" />
+      </span>
+      <span class="hero__float panel-lime">
+        <app-icon name="sparkles" [size]="18" />
+        <span class="hero__float-text">{{ 'home.hero.searchTitle' | t }}</span>
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SPORTS ===================== -->
+<section class="section section--cream">
+  <div class="shell">
+    <div class="section-head">
+      <div class="stack stack-2">
+        <h2 class="display-3">{{ 'home.sportsSection.title' | t }}</h2>
+        <p class="lead">{{ 'home.sportsSection.subtitle' | t }}</p>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <ul class="sports" aria-hidden="true">
+        @for (placeholder of [1, 2, 3, 4, 5]; track placeholder) {
+          <li class="sport skeleton sport--loading"></li>
+        }
+      </ul>
+    } @else if (sports().length === 0) {
+      <app-state-panel
+        kind="empty"
+        titleKey="home.featured.emptyTitle"
+        messageKey="home.featured.emptyMessage"
+      />
+    } @else {
+      <ul class="sports">
+        @for (sport of sports(); track sport.id) {
+          <li>
+            <a class="sport" [routerLink]="['/coaches']" [queryParams]="{ sport: sport.slug }">
+              <span class="sport__media">
+                <app-smart-image [src]="sportImageUrl(sport.slug)" [alt]="''" ratio="4 / 3" tone="forest" />
+              </span>
+              <span class="sport__icon">
+                <app-icon [name]="sportIconName(sport.slug)" [size]="20" />
+              </span>
+              <span class="sport__body">
+                <span class="sport__name">{{ locale.sportName(sport.slug, sport.name) }}</span>
+                <span class="sport__blurb">{{ locale.sportBlurb(sport.slug) }}</span>
+                <span class="sport__count">
+                  {{ 'home.sportsSection.coaches' | t: { count: sport.coachCount } }}
+                </span>
+              </span>
+              <span class="sport__arrow" aria-hidden="true">
+                <app-icon name="arrow-right" [size]="16" class="dir-icon" />
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>
+
+<!-- ===================== FEATURED COACHES ===================== -->
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <div class="stack stack-2">
+        <h2 class="display-3">{{ 'home.featured.title' | t }}</h2>
+        <p class="lead">{{ 'home.featured.subtitle' | t }}</p>
+      </div>
+      <a class="btn btn--outline" routerLink="/coaches">
+        {{ 'common.seeAll' | t }}
+        <app-icon name="arrow-right" [size]="16" class="dir-icon" />
+      </a>
+    </div>
+
+    @if (loading()) {
+      <div class="grid grid--3" aria-hidden="true">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div class="card skeleton card--placeholder"></div>
+        }
+      </div>
+    } @else if (error(); as failure) {
+      <app-state-panel
+        kind="error"
+        titleKey="errors.title"
+        [messageKey]="failure.isNetworkError ? 'errors.network' : failure.messageKey"
+        [detail]="failure.message"
+        actionKey="common.retry"
+        (action)="load()"
+      />
+    } @else if (featured().length === 0) {
+      <app-state-panel
+        kind="empty"
+        titleKey="home.featured.emptyTitle"
+        messageKey="home.featured.emptyMessage"
+      />
+    } @else {
+      <div class="grid grid--3">
+        @for (coach of featured(); track coach.id) {
+          <app-coach-card [coach]="coach" />
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="section section--dark how" id="how-it-works">
+  <span class="grain" aria-hidden="true"></span>
+  <div class="shell how__inner">
+    <div class="how__media">
+      <app-smart-image [src]="media.howItWorks" [alt]="''" ratio="4 / 5" tone="forest" />
+    </div>
+
+    <div class="how__body">
+      <h2 class="display-3">{{ 'home.how.title' | t }}</h2>
+      <p class="lead">{{ 'home.how.subtitle' | t }}</p>
+
+      <div class="how__tabs" role="tablist" [attr.aria-label]="'home.how.title' | t">
+        <button
+          type="button"
+          class="how__tab"
+          role="tab"
+          [attr.aria-selected]="audience() === 'clients'"
+          [class.is-active]="audience() === 'clients'"
+          (click)="selectAudience('clients')"
+        >
+          <app-icon name="user" [size]="16" />
+          {{ 'home.how.clients' | t }}
+        </button>
+        <button
+          type="button"
+          class="how__tab"
+          role="tab"
+          [attr.aria-selected]="audience() === 'coaches'"
+          [class.is-active]="audience() === 'coaches'"
+          (click)="selectAudience('coaches')"
+        >
+          <app-icon name="whistle" [size]="16" />
+          {{ 'home.how.coaches' | t }}
+        </button>
+      </div>
+
+      <ol class="how__steps" role="tabpanel">
+        @for (step of steps(); track step; let index = $index) {
+          <li class="how__step">
+            <span class="how__step-number">{{ locale.formatNumber(index + 1) }}</span>
+            <span class="how__step-body">
+              <strong>{{ 'home.how.' + step + 'Title' | t }}</strong>
+              <span>{{ 'home.how.' + step + 'Text' | t }}</span>
+            </span>
+          </li>
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COACH CTA ===================== -->
+<section class="section" id="for-coaches">
+  <div class="shell">
+    <div class="cta panel-lime">
+      <div class="cta__body">
+        <p class="eyebrow cta__eyebrow">{{ 'home.cta.eyebrow' | t }}</p>
+        <h2 class="display-3">{{ 'home.cta.title' | t }}</h2>
+        <p class="cta__text">{{ 'home.cta.text' | t }}</p>
+        <div class="row">
+          <a class="btn btn--dark btn--lg" routerLink="/register" [queryParams]="{ role: 'COACH' }">
+            {{ 'home.cta.primary' | t }}
+            <app-icon name="arrow-right" [size]="17" class="dir-icon" />
+          </a>
+          <a class="btn btn--outline btn--lg cta__secondary" routerLink="/" fragment="how-it-works">
+            {{ 'home.cta.secondary' | t }}
+          </a>
+        </div>
+      </div>
+      <div class="cta__media">
+        <app-smart-image [src]="media.coachCta" [alt]="''" ratio="4 / 3" tone="forest" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRUST ===================== -->
+<section class="section section--cream">
+  <div class="shell">
+    <h2 class="display-3 trust__title">{{ 'home.trust.title' | t }}</h2>
+    <ul class="grid grid--3">
+      @for (item of trustItems; track item.titleKey) {
+        <li class="card card--pad trust__item">
+          <span class="trust__icon" aria-hidden="true">
+            <app-icon [name]="item.icon" [size]="20" />
+          </span>
+          <h3 class="trust__heading">{{ item.titleKey | t }}</h3>
+          <p class="muted trust__text">{{ item.textKey | t }}</p>
+        </li>
+      }
+    </ul>
+  </div>
+</section>

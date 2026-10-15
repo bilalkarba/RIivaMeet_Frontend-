@@ -1,0 +1,227 @@
+<section class="section section--tight page-head">
+  <div class="shell">
+    <nav class="crumbs" [attr.aria-label]="'nav.home' | t">
+      <a routerLink="/">{{ 'nav.home' | t }}</a>
+      <app-icon name="chevron-right" [size]="14" class="dir-icon" />
+      <span aria-current="page">{{ 'search.title' | t }}</span>
+    </nav>
+
+    <div class="page-head__row">
+      <div class="stack stack-2">
+        <h1 class="display-2">{{ 'search.title' | t }}</h1>
+        <p class="lead">{{ 'search.subtitle' | t }}</p>
+      </div>
+
+      <app-search-form
+        variant="page"
+        [showNeighborhood]="true"
+        [showClear]="true"
+        [busy]="loading()"
+        [sports]="sports()"
+        [initial]="searchInitial()"
+        (submitted)="onSearch($event)"
+        (cleared)="clearFilters()"
+      />
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight results">
+  <div class="shell results__layout">
+    <!-- ---------------- Filters ---------------- -->
+    <aside class="filters" [class.is-open]="filtersOpen()" [attr.aria-label]="'search.filtersTitle' | t">
+      <div class="filters__head">
+        <h2 class="filters__title">
+          <app-icon name="filter" [size]="17" />
+          {{ 'search.filtersTitle' | t }}
+        </h2>
+        <button type="button" class="btn btn--ghost btn--sm filters__close" (click)="toggleFilters()">
+          <app-icon name="close" [size]="15" />
+          {{ 'search.closeFilters' | t }}
+        </button>
+      </div>
+
+      <div class="filters__body" [formGroup]="advanced">
+        <div class="field">
+          <label class="label" for="filter-sort">{{ 'search.sortLabel' | t }}</label>
+          <select
+            id="filter-sort"
+            class="select"
+            [value]="activeSort()"
+            (change)="onSortChange($event)"
+          >
+            @for (sort of availableSorts(); track sort) {
+              <option [value]="sort">{{ sortLabelKey(sort) | t }}</option>
+            }
+          </select>
+        </div>
+
+        <fieldset class="filters__group">
+          <legend class="label">{{ 'search.priceLabel' | t }}</legend>
+          <div class="filters__pair">
+            <div class="field">
+              <label class="sr-only" for="filter-min-price">{{ 'search.priceMin' | t }}</label>
+              <input
+                id="filter-min-price"
+                class="input"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                formControlName="minPrice"
+                [placeholder]="'search.priceMin' | t"
+                (change)="onAdvancedChange()"
+              />
+            </div>
+            <div class="field">
+              <label class="sr-only" for="filter-max-price">{{ 'search.priceMax' | t }}</label>
+              <input
+                id="filter-max-price"
+                class="input"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                formControlName="maxPrice"
+                [placeholder]="'search.priceMax' | t"
+                (change)="onAdvancedChange()"
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="filters__group">
+          <legend class="label">{{ 'search.ratingLabel' | t }}</legend>
+          <div class="filters__ratings">
+            <button
+              type="button"
+              class="chip filters__rating"
+              [class.chip--lime]="advanced.controls.minRating.value === null"
+              (click)="setRating(null)"
+            >
+              {{ 'search.ratingAny' | t }}
+            </button>
+            @for (rating of ratingOptions; track rating) {
+              <button
+                type="button"
+                class="chip filters__rating"
+                [class.chip--lime]="advanced.controls.minRating.value === rating"
+                (click)="setRating(rating)"
+              >
+                {{ 'search.ratingValue' | t: { count: rating } }}
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        <p class="filters__note">
+          <app-icon name="info" [size]="14" />
+          {{ 'search.distanceUnavailable' | t }}
+        </p>
+
+        <button type="button" class="btn btn--outline btn--block" [disabled]="!hasActiveFilters()" (click)="clearFilters()">
+          {{ 'common.clearAll' | t }}
+        </button>
+      </div>
+    </aside>
+
+    <!-- ---------------- Results ---------------- -->
+    <div class="results__main">
+      <div class="results__bar">
+        <p class="results__count" role="status">
+          @if (loading()) {
+            {{ 'common.loading' | t }}
+          } @else {
+            {{ 'search.results' | t: { count: total() } }}
+          }
+        </p>
+
+        <div class="results__bar-actions">
+          @if (hasActiveFilters()) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="clearFilters()">
+              {{ 'common.clearAll' | t }}
+            </button>
+          }
+          <button
+            type="button"
+            class="btn btn--outline btn--sm filters__toggle"
+            [attr.aria-expanded]="filtersOpen()"
+            (click)="toggleFilters()"
+          >
+            <app-icon name="filter" [size]="15" />
+            {{ 'search.openFilters' | t }}
+          </button>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="grid grid--3" aria-hidden="true">
+          @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+            <div class="card skeleton card--placeholder"></div>
+          }
+        </div>
+      } @else if (error(); as failure) {
+        <app-state-panel
+          kind="error"
+          titleKey="search.errorTitle"
+          [messageKey]="failure.isNetworkError ? 'errors.network' : failure.messageKey"
+          [detail]="failure.message"
+          actionKey="common.retry"
+          (action)="retry()"
+        />
+      } @else if (results().length === 0) {
+        <app-state-panel
+          kind="empty"
+          titleKey="search.noResultsTitle"
+          messageKey="search.noResultsMessage"
+          actionKey="common.clearAll"
+          (action)="clearFilters()"
+        />
+      } @else {
+        <div class="grid grid--3">
+          @for (coach of results(); track coach.id) {
+            <app-coach-card [coach]="coach" />
+          }
+        </div>
+
+        @if (meta(); as page) {
+          @if (page.totalPages > 1) {
+            <nav class="pagination" [attr.aria-label]="'common.page' | t">
+              <button
+                type="button"
+                class="pagination__step"
+                [attr.aria-label]="'search.prevPage' | t"
+                [disabled]="!page.hasPreviousPage"
+                (click)="goToPage(page.page - 1)"
+              >
+                <app-icon name="chevron-left" [size]="16" class="dir-icon" />
+              </button>
+
+              @for (number of pageNumbers(); track number) {
+                <button
+                  type="button"
+                  class="pagination__page"
+                  [class.is-active]="number === page.page"
+                  [attr.aria-current]="number === page.page ? 'page' : null"
+                  (click)="goToPage(number)"
+                >
+                  {{ locale.formatNumber(number) }}
+                </button>
+              }
+
+              <button
+                type="button"
+                class="pagination__step"
+                [attr.aria-label]="'search.nextPage' | t"
+                [disabled]="!page.hasNextPage"
+                (click)="goToPage(page.page + 1)"
+              >
+                <app-icon name="chevron-right" [size]="16" class="dir-icon" />
+              </button>
+            </nav>
+          }
+        }
+      }
+    </div>
+  </div>
+</section>

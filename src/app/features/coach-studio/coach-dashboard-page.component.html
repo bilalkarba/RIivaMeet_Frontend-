@@ -1,0 +1,457 @@
+<section class="section section--tight">
+  <div class="shell studio">
+    <header class="studio__head">
+      <div class="stack stack-2">
+        <h1 class="display-2">{{ 'coachDash.title' | t }}</h1>
+        <p class="lead">{{ 'coachDash.subtitle' | t }}</p>
+      </div>
+
+      <div class="studio__head-meta">
+        <div class="account">
+          <app-avatar [name]="auth.user()?.name ?? ''" size="md" [decorative]="true" />
+          <div class="account__text">
+            <strong class="account__name">{{ auth.user()?.name }}</strong>
+            <span class="account__email">{{ auth.user()?.email }}</span>
+          </div>
+        </div>
+        @if (auth.isCoach()) {
+          <span class="chip" [class.chip--lime]="isPublished()" [class.chip--neutral]="!isPublished()">
+            <app-icon [name]="isPublished() ? 'shield' : 'info'" [size]="14" />
+            {{ (isPublished() ? 'common.published' : 'common.unpublished') | t }}
+          </span>
+        }
+      </div>
+    </header>
+
+    @if (!auth.isCoach()) {
+      <div class="card card--pad stack stack-4 studio__gate">
+        <app-state-panel kind="info" titleKey="coachDash.notCoachTitle" messageKey="coachDash.notCoachMessage" />
+        <a class="btn btn--primary" routerLink="/register" [queryParams]="{ role: 'COACH' }">
+          {{ 'coachDash.becomeCoach' | t }}
+        </a>
+      </div>
+    } @else if (loading()) {
+      <div class="stack stack-4" aria-hidden="true">
+        <div class="skeleton studio__tabs-skeleton"></div>
+        <div class="skeleton studio__panel-skeleton"></div>
+      </div>
+    } @else if (loadError(); as failure) {
+      <app-state-panel
+        kind="error"
+        titleKey="errors.title"
+        [messageKey]="failure.isNetworkError ? 'errors.network' : failure.messageKey"
+        [detail]="failure.message"
+        actionKey="common.retry"
+        (action)="retry()"
+      />
+    } @else {
+      <!-- ============ Tabs ============ -->
+      <div class="studio__tabs" role="tablist" [attr.aria-label]="'coachDash.title' | t">
+        @for (item of tabs; track item) {
+          <button
+            type="button"
+            role="tab"
+            class="studio__tab"
+            [id]="'tab-' + item"
+            [attr.aria-selected]="tab() === item"
+            [attr.aria-controls]="'panel-' + item"
+            [class.is-active]="tab() === item"
+            (click)="setTab(item)"
+          >
+            {{ 'coachDash.tabs.' + item | t }}
+            @if (item === 'requests' && unreadBookingAlertCount() > 0) {
+              <span
+                class="studio__tab-count"
+                [attr.aria-label]="'coachDash.notifications.unreadCount' | t: { count: unreadBookingAlertCount() }"
+              >
+                {{ unreadBookingAlertCount() }}
+              </span>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- ============ Profile ============ -->
+      @if (tab() === 'profile') {
+        <div class="studio__panel" role="tabpanel" id="panel-profile" aria-labelledby="tab-profile">
+          <div class="studio__grid">
+            <form class="card card--pad stack stack-4" [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+              <div class="stack stack-2">
+                <h2 class="studio__panel-title">
+                  {{ (hasProfile() ? 'coachDash.profile.editTitle' : 'coachDash.profile.createTitle') | t }}
+                </h2>
+                <p class="muted studio__panel-sub">
+                  {{ (hasProfile() ? 'coachDash.profile.editSubtitle' : 'coachDash.profile.createSubtitle') | t }}
+                </p>
+              </div>
+
+              <div class="field">
+                <label class="label" for="studio-bio">{{ 'coachDash.profile.bio' | t }}</label>
+                <textarea
+                  id="studio-bio"
+                  class="textarea"
+                  formControlName="bio"
+                  maxlength="2000"
+                  [attr.aria-describedby]="'studio-bio-hint'"
+                  [attr.aria-invalid]="bioError() !== null"
+                ></textarea>
+                @if (bioError(); as key) {
+                  <p class="field-error">{{ key | t }}</p>
+                } @else {
+                  <p class="field-hint" id="studio-bio-hint">{{ 'coachDash.profile.bioHint' | t }}</p>
+                }
+              </div>
+
+              <div class="studio__row">
+                <div class="field">
+                  <label class="label" for="studio-price">{{ 'coachDash.profile.price' | t }}</label>
+                  <input
+                    id="studio-price"
+                    class="input"
+                    type="number"
+                    min="0"
+                    max="100000"
+                    step="0.01"
+                    inputmode="decimal"
+                    formControlName="hourlyPrice"
+                    [attr.aria-invalid]="priceError() !== null"
+                  />
+                  @if (priceError(); as key) {
+                    <p class="field-error">{{ key | t }}</p>
+                  } @else {
+                    <p class="field-hint">{{ 'coachDash.profile.priceHint' | t }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label class="label" for="studio-level">{{ 'coachDash.profile.level' | t }}</label>
+                  <select id="studio-level" class="select" formControlName="experienceLevel">
+                    @for (level of levels; track level) {
+                      <option [value]="level">{{ locale.enumLabel('level', level) }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="studio__row">
+                <div class="field">
+                  <label class="label" for="studio-city">{{ 'coachDash.profile.city' | t }}</label>
+                  <input id="studio-city" class="input" type="text" formControlName="city" autocomplete="address-level2" />
+                  @if (cityError(); as key) {
+                    <p class="field-error">{{ key | t }}</p>
+                  }
+                </div>
+                <div class="field">
+                  <label class="label" for="studio-neighborhood">{{ 'coachDash.profile.neighborhood' | t }}</label>
+                  <input
+                    id="studio-neighborhood"
+                    class="input"
+                    type="text"
+                    formControlName="neighborhood"
+                    autocomplete="address-level3"
+                  />
+                  @if (neighborhoodError(); as key) {
+                    <p class="field-error">{{ key | t }}</p>
+                  }
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label" for="studio-address">
+                  {{ 'coachDash.profile.address' | t }}
+                  <span class="label__optional">({{ 'common.optional' | t }})</span>
+                </label>
+                <input id="studio-address" class="input" type="text" formControlName="address" autocomplete="street-address" />
+                @if (addressError(); as key) {
+                  <p class="field-error">{{ key | t }}</p>
+                } @else {
+                  <p class="field-hint">{{ 'coachDash.profile.addressHint' | t }}</p>
+                }
+              </div>
+
+              <fieldset class="studio__coords">
+                <legend class="label">{{ 'coachDash.profile.coordinates' | t }}</legend>
+                <p class="field-hint">{{ 'coachDash.profile.coordinatesHint' | t }}</p>
+
+                <div class="studio__row">
+                  <div class="field">
+                    <label class="label" for="studio-lat">{{ 'coachDash.profile.latitude' | t }}</label>
+                    <input
+                      id="studio-lat"
+                      class="input"
+                      type="number"
+                      step="any"
+                      min="-90"
+                      max="90"
+                      dir="ltr"
+                      formControlName="latitude"
+                    />
+                  </div>
+                  <div class="field">
+                    <label class="label" for="studio-lng">{{ 'coachDash.profile.longitude' | t }}</label>
+                    <input
+                      id="studio-lng"
+                      class="input"
+                      type="number"
+                      step="any"
+                      min="-180"
+                      max="180"
+                      dir="ltr"
+                      formControlName="longitude"
+                    />
+                  </div>
+                </div>
+
+                @if (coordinatesError(); as key) {
+                  <p class="field-error">{{ key | t }}</p>
+                }
+
+                <div class="row">
+                  <button
+                    type="button"
+                    class="btn btn--outline btn--sm"
+                    [disabled]="locating()"
+                    (click)="useMyLocation()"
+                  >
+                    <app-icon name="locate" [size]="15" />
+                    {{ (locating() ? 'coachDash.profile.locating' : 'coachDash.profile.useMyLocation') | t }}
+                  </button>
+                  @if (coordinates()) {
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="clearCoordinates()">
+                      {{ 'coachDash.profile.clearCoordinates' | t }}
+                    </button>
+                  }
+                </div>
+
+                @if (locationMessage(); as key) {
+                  <p class="field-hint" role="status">{{ key | t }}</p>
+                }
+              </fieldset>
+
+              <div class="row studio__actions">
+                <button type="submit" class="btn btn--primary" [disabled]="saving()">
+                  {{ (saving() ? 'common.saving' : (hasProfile() ? 'coachDash.profile.save' : 'coachDash.profile.create')) | t }}
+                </button>
+
+                @if (hasProfile()) {
+                  <button type="button" class="btn btn--outline" [disabled]="publishing()" (click)="togglePublish()">
+                    <app-icon [name]="isPublished() ? 'eye-off' : 'eye'" [size]="16" />
+                    {{ (isPublished() ? 'coachDash.profile.unpublish' : 'coachDash.profile.publish') | t }}
+                  </button>
+                }
+              </div>
+
+              <p class="field-hint">{{ 'coachDash.profile.publishHint' | t }}</p>
+            </form>
+
+            <aside class="stack stack-4">
+              <div class="card card--pad stack stack-3">
+                <h2 class="studio__panel-title">{{ 'coachDash.profile.completeness' | t }}</h2>
+                <ul class="checklist">
+                  @for (item of completion(); track item.key) {
+                    <li class="checklist__item" [class.is-done]="item.done">
+                      <app-icon [name]="item.done ? 'check-circle' : 'circle'" [size]="17" />
+                      <span>{{ 'coachDash.profile.' + item.key | t }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+
+              @if (profile(); as current) {
+                <div class="card card--pad stack stack-3">
+                  <h2 class="studio__panel-title">{{ 'common.rating' | t }}</h2>
+                  <p class="studio__stat">
+                    {{ current.averageRating === null ? '–' : locale.formatNumber(current.averageRating, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }}
+                  </p>
+                  <p class="muted">{{ 'common.reviewCount' | t: { count: current.reviewCount } }}</p>
+                  @if (current.totalBookings !== undefined) {
+                    <p class="muted">
+                      {{ 'common.sessionCount' | t: { count: current.totalBookings } }}
+                    </p>
+                  }
+                  @if (current.isPublished) {
+                    <a class="btn btn--outline btn--sm" [routerLink]="['/coaches', current.id]">
+                      {{ 'common.viewProfile' | t }}
+                      <app-icon name="external-link" [size]="14" />
+                    </a>
+                  }
+                </div>
+              }
+            </aside>
+          </div>
+        </div>
+      }
+
+      <!-- ============ Sports ============ -->
+      @if (tab() === 'sports') {
+        <div class="studio__panel" role="tabpanel" id="panel-sports" aria-labelledby="tab-sports">
+          <div class="card card--pad stack stack-4">
+            <div class="stack stack-2">
+              <h2 class="studio__panel-title">{{ 'coachDash.sports.title' | t }}</h2>
+              <p class="muted studio__panel-sub">{{ 'coachDash.sports.subtitle' | t }}</p>
+            </div>
+
+            @if (sports().length === 0) {
+              <app-state-panel kind="empty" titleKey="search.noResultsTitle" messageKey="search.noResultsMessage" />
+            } @else {
+              <ul class="sport-picker">
+                @for (sport of sports(); track sport.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="sport-choice"
+                      [class.is-selected]="isSportSelected(sport.id)"
+                      [attr.aria-pressed]="isSportSelected(sport.id)"
+                      (click)="toggleSport(sport.id)"
+                    >
+                      <span class="sport-choice__icon" aria-hidden="true">
+                        <app-icon [name]="sportIconName(sport.slug)" [size]="18" />
+                      </span>
+                      <span class="sport-choice__name">{{ locale.sportName(sport.slug, sport.name) }}</span>
+                      <span class="sport-choice__count">
+                        {{ 'home.sportsSection.coaches' | t: { count: sport.coachCount } }}
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            <div class="row studio__actions">
+              <span class="chip chip--neutral">
+                {{ 'coachDash.sports.selectedCount' | t: { count: mySportIds().size } }}
+              </span>
+              <button type="button" class="btn btn--primary" [disabled]="sportsSaving()" (click)="saveSports()">
+                {{ (sportsSaving() ? 'common.saving' : 'coachDash.sports.save') | t }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ============ Availability ============ -->
+      @if (tab() === 'availability') {
+        <div class="studio__panel" role="tabpanel" id="panel-availability" aria-labelledby="tab-availability">
+          <div class="studio__grid">
+            <div class="card card--pad stack stack-4">
+              <div class="stack stack-2">
+                <h2 class="studio__panel-title">{{ 'coachDash.availability.title' | t }}</h2>
+                <p class="muted studio__panel-sub">{{ 'coachDash.availability.subtitle' | t }}</p>
+              </div>
+
+              @if (availability().length === 0) {
+                <p class="muted">{{ 'coachDash.availability.empty' | t }}</p>
+              } @else {
+                <ul class="windows">
+                  @for (slot of availability(); track slot.id) {
+                    <li class="windows__item">
+                      <span class="windows__time">
+                        <app-icon name="calendar" [size]="15" />
+                        {{ locale.formatRange(slot.startAt, slot.endAt) }}
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn--danger btn--sm"
+                        [disabled]="availabilitySaving()"
+                        (click)="deleteAvailability(slot)"
+                      >
+                        <app-icon name="trash" [size]="14" />
+                        {{ 'coachDash.availability.delete' | t }}
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <form class="card card--pad stack stack-4" [formGroup]="availabilityForm" (ngSubmit)="addAvailability()" novalidate>
+              <h2 class="studio__panel-title">{{ 'coachDash.availability.add' | t }}</h2>
+
+              <div class="field">
+                <label class="label" for="availability-start">{{ 'coachDash.availability.start' | t }}</label>
+                <input id="availability-start" class="input" type="datetime-local" dir="ltr" formControlName="startAt" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="availability-end">{{ 'coachDash.availability.end' | t }}</label>
+                <input id="availability-end" class="input" type="datetime-local" dir="ltr" formControlName="endAt" />
+              </div>
+
+              @if (availabilityError(); as key) {
+                <p class="field-error" role="alert">{{ key | t }}</p>
+              }
+
+              <button type="submit" class="btn btn--primary btn--block" [disabled]="availabilitySaving()">
+                {{ (availabilitySaving() ? 'common.saving' : 'coachDash.availability.add') | t }}
+              </button>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- ============ Requests ============ -->
+      @if (tab() === 'requests') {
+        <div class="studio__panel" role="tabpanel" id="panel-requests" aria-labelledby="tab-requests">
+          @if (realtimeUnavailable()) {
+            <div class="studio__realtime-note" role="status">
+              {{ 'coachDash.notifications.realtimeUnavailable' | t }}
+              <button type="button" class="btn btn--outline btn--sm" (click)="reconnectRealtime()">
+                {{ 'coachDash.notifications.refresh' | t }}
+              </button>
+            </div>
+          }
+
+          <section class="card card--pad stack stack-3 studio__alerts" aria-labelledby="booking-alerts-title">
+            <div class="row studio__alerts-head">
+              <div class="stack stack-1">
+                <h2 class="studio__panel-title" id="booking-alerts-title">
+                  {{ 'coachDash.notifications.title' | t }}
+                </h2>
+                @if (unreadBookingAlertCount() > 0) {
+                  <p class="muted" role="status">
+                    {{ 'coachDash.notifications.unreadCount' | t: { count: unreadBookingAlertCount() } }}
+                  </p>
+                }
+              </div>
+              @if (unreadBookingAlertCount() > 0) {
+                <button
+                  type="button"
+                  class="btn btn--outline btn--sm"
+                  [disabled]="markingAlertsRead()"
+                  (click)="markBookingAlertsRead()"
+                >
+                  {{ (markingAlertsRead() ? 'common.saving' : 'coachDash.notifications.markRead') | t }}
+                </button>
+              }
+            </div>
+
+            @if (alertsLoading()) {
+              <p class="muted" role="status">{{ 'coachDash.notifications.loading' | t }}</p>
+            } @else if (alertsError(); as failure) {
+              <app-state-panel
+                kind="error"
+                titleKey="errors.title"
+                [messageKey]="failure.isNetworkError ? 'errors.network' : failure.messageKey"
+                [detail]="failure.message"
+                actionKey="coachDash.notifications.refresh"
+                (action)="loadBookingAlerts()"
+              />
+            } @else if (bookingAlerts().length === 0) {
+              <p class="muted">{{ 'coachDash.notifications.empty' | t }}</p>
+            } @else {
+              <ul class="studio__alert-list">
+                @for (alert of bookingAlerts(); track alert.id) {
+                  <li [class.studio__alert--unread]="!alert.readAt">
+                    <strong>{{ 'coachDash.notifications.newRequest' | t: { client: alert.clientName } }}</strong>
+                    <span>{{ locale.formatRange(alert.startAt, alert.endAt) }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+          <app-booking-list view="coach" />
+        </div>
+      }
+    }
+  </div>
+</section>

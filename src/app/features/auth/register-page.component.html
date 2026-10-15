@@ -1,0 +1,179 @@
+<app-auth-layout>
+  <div class="stack stack-5">
+    <header class="stack stack-2">
+      <h1 class="display-3">{{ 'auth.register.title' | t }}</h1>
+      <p class="lead">{{ 'auth.register.subtitle' | t }}</p>
+    </header>
+
+    @if (errorKey(); as key) {
+      <div class="alert alert--error" role="alert">
+        <app-icon name="alert" [size]="17" />
+        <span>{{ key | t }}</span>
+      </div>
+    }
+
+    <form class="stack stack-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <fieldset class="field">
+        <legend class="label">{{ 'auth.register.role' | t }}</legend>
+        <div class="roles">
+          <label class="choice" [class.choice--active]="form.controls.role.value === 'CLIENT'">
+            <input
+              type="radio"
+              name="role"
+              value="CLIENT"
+              class="sr-only"
+              [checked]="form.controls.role.value === 'CLIENT'"
+              (change)="selectRole('CLIENT')"
+            />
+            <span class="role__icon" aria-hidden="true"><app-icon name="user" [size]="18" /></span>
+            <span class="role__body">
+              <span class="role__title">{{ 'auth.register.roleClient' | t }}</span>
+              <span class="role__hint">{{ 'auth.register.roleClientHint' | t }}</span>
+            </span>
+            @if (form.controls.role.value === 'CLIENT') {
+              <app-icon name="check-circle" [size]="18" class="role__check" />
+            }
+          </label>
+
+          <label class="choice" [class.choice--active]="form.controls.role.value === 'COACH'">
+            <input
+              type="radio"
+              name="role"
+              value="COACH"
+              class="sr-only"
+              [checked]="form.controls.role.value === 'COACH'"
+              (change)="selectRole('COACH')"
+            />
+            <span class="role__icon" aria-hidden="true"><app-icon name="whistle" [size]="18" /></span>
+            <span class="role__body">
+              <span class="role__title">{{ 'auth.register.roleCoach' | t }}</span>
+              <span class="role__hint">{{ 'auth.register.roleCoachHint' | t }}</span>
+            </span>
+            @if (form.controls.role.value === 'COACH') {
+              <app-icon name="check-circle" [size]="18" class="role__check" />
+            }
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label class="label" for="register-name">{{ 'auth.register.name' | t }}</label>
+        <input
+          id="register-name"
+          class="input"
+          type="text"
+          formControlName="name"
+          autocomplete="name"
+          [placeholder]="'auth.register.namePlaceholder' | t"
+          [attr.aria-invalid]="nameError() !== null"
+        />
+        @if (nameError(); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        } @else if (serverError('name'); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="register-email">{{ 'auth.register.email' | t }}</label>
+        <input
+          id="register-email"
+          class="input"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          inputmode="email"
+          dir="ltr"
+          [attr.aria-invalid]="emailError() !== null"
+        />
+        @if (emailError(); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        } @else if (serverError('email'); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="register-phone">
+          {{ 'auth.register.phone' | t }}
+          <span class="label__optional">({{ 'common.optional' | t }})</span>
+        </label>
+        <input
+          id="register-phone"
+          class="input"
+          type="tel"
+          formControlName="phone"
+          autocomplete="tel"
+          inputmode="tel"
+          dir="ltr"
+          [attr.aria-invalid]="phoneError() !== null"
+          [attr.aria-describedby]="'register-phone-hint'"
+        />
+        @if (phoneError(); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        } @else {
+          <p class="field-hint" id="register-phone-hint">{{ 'auth.register.phoneHint' | t }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="register-password">{{ 'auth.register.password' | t }}</label>
+        <div class="input-group">
+          <input
+            id="register-password"
+            class="input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="new-password"
+            dir="ltr"
+            [attr.aria-invalid]="passwordError() !== null"
+            [attr.aria-describedby]="'register-password-hint'"
+          />
+          <button
+            type="button"
+            class="btn btn--outline btn--icon"
+            [attr.aria-pressed]="showPassword()"
+            [attr.aria-label]="'auth.register.password' | t"
+            (click)="togglePassword()"
+          >
+            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="17" />
+          </button>
+        </div>
+        @if (passwordError(); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        } @else if (serverError('password'); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        } @else {
+          <p class="field-hint" id="register-password-hint">{{ 'auth.register.passwordHint' | t }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="register-confirm">{{ 'auth.register.confirmPassword' | t }}</label>
+        <input
+          id="register-confirm"
+          class="input"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          dir="ltr"
+          [attr.aria-invalid]="confirmError() !== null"
+        />
+        @if (confirmError(); as key) {
+          <p class="field-error">{{ key | t }}</p>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block" [disabled]="auth.isBusy()">
+        {{ (auth.isBusy() ? 'auth.register.submitting' : 'auth.register.submit') | t }}
+      </button>
+
+      <p class="field-hint">{{ 'auth.register.terms' | t }}</p>
+    </form>
+
+    <p class="auth-switch">
+      {{ 'auth.register.haveAccount' | t }}
+      <a routerLink="/login">{{ 'auth.register.signIn' | t }}</a>
+    </p>
+  </div>
+</app-auth-layout>
