@@ -8,7 +8,7 @@
 export const environment = {
   production: false,
   /** Base URL of the RivaMeet API, including the `/api/v1` prefix. */
-  apiUrl: 'http://localhost:4000/api/v1',
+  apiUrl: 'https://riivameetbackend-production.up.railway.app/api/v1',
   /**
    * Development-only safety net: when the API cannot be reached at all (connection
    * refused / offline), read-only screens fall back to clearly labelled sample data

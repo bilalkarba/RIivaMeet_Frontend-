@@ -6,7 +6,7 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:4000/api/v1',
+          apiUrl: 'https://riivameetbackend-production.up.railway.app/api/v1',
   enableMockFallback: false,
   defaultLanguage: 'ar',
   showDevHints: false,
