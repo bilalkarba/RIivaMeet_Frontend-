@@ -2,9 +2,8 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 /**
- * Brand lockup: the RivaMeet emblem (navy tile, cyan waves, football) plus the
- * two-tone wordmark. The wordmark is a proper noun and is intentionally not
- * translated.
+ * Brand lockup: the default emblem and wordmark, or the provided logo image when
+ * requested. The wordmark is a proper noun and is intentionally not translated.
  */
 @Component({
   selector: 'app-brand',
@@ -12,18 +11,22 @@ import { RouterLink } from '@angular/router';
   host: { '[class.is-dark]': 'onDark()' },
   template: `
     <a class="brand" routerLink="/" [attr.aria-label]="label()">
-      <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32" width="32" height="32" role="presentation" focusable="false">
-          <rect x="0" y="0" width="32" height="32" rx="9" fill="var(--mark-tile)" />
-          <g fill="none" stroke="var(--mark-wave)" stroke-width="2" stroke-linecap="round">
-            <path d="M4 9.5q3-3 6 0t6 0t6 0t6 0" />
-            <path d="M4 15q3-3 6 0t6 0t6 0" opacity="0.72" />
-          </g>
-          <circle cx="23.4" cy="23" r="4.7" fill="var(--mark-ball)" />
-          <path d="M23.4 20.7l2.3 1.7-.9 2.7h-2.8l-.9-2.7z" fill="var(--mark-patch)" />
-        </svg>
-      </span>
-      <span class="brand__word"><span class="brand__word-lead">Riva</span>Meet</span>
+      @if (imageLogo()) {
+        <img class="brand__image" src="/rivameet-logo.png" alt="" />
+      } @else {
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="32" height="32" role="presentation" focusable="false">
+            <rect x="0" y="0" width="32" height="32" rx="9" fill="var(--mark-tile)" />
+            <g fill="none" stroke="var(--mark-wave)" stroke-width="2" stroke-linecap="round">
+              <path d="M4 9.5q3-3 6 0t6 0t6 0t6 0" />
+              <path d="M4 15q3-3 6 0t6 0t6 0" opacity="0.72" />
+            </g>
+            <circle cx="23.4" cy="23" r="4.7" fill="var(--mark-ball)" />
+            <path d="M23.4 20.7l2.3 1.7-.9 2.7h-2.8l-.9-2.7z" fill="var(--mark-patch)" />
+          </svg>
+        </span>
+        <span class="brand__word"><span class="brand__word-lead">Riva</span>Meet</span>
+      }
     </a>
   `,
   styles: `
@@ -57,6 +60,13 @@ import { RouterLink } from '@angular/router';
       filter: drop-shadow(0 6px 14px rgba(127, 221, 238, 0.38));
     }
 
+    .brand__image {
+      display: block;
+      width: 3.5rem;
+      height: 3.5rem;
+      object-fit: contain;
+    }
+
     .brand__word {
       font-size: 1.24rem;
       font-weight: 800;
@@ -81,4 +91,5 @@ import { RouterLink } from '@angular/router';
 export class BrandComponent {
   readonly onDark = input(false);
   readonly label = input('RivaMeet');
+  readonly imageLogo = input(false);
 }

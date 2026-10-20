@@ -33,7 +33,15 @@ interface CandidatePayload {
 const STUN_ONLY: CallConfig = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   ringTimeoutMs: 45000,
+  disconnectGraceMs: 15000,
 };
+
+/** Wait this long after `disconnected` before attempting an ICE restart. */
+const ICE_RESTART_DELAY_MS = 4000;
+/** How many ICE restarts are attempted before the call is reported as failed. */
+const ICE_RESTART_MAX_ATTEMPTS = 3;
+/** Extra time added to the server grace so the server decides the terminal state first. */
+const SOCKET_GRACE_MARGIN_MS = 1000;
 
 /**
  * Audio / video calls.
@@ -72,6 +80,11 @@ export class CallService {
   private queuedCandidates: RTCIceCandidateInit[] = [];
   private endTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private ticker: ReturnType<typeof globalThis.setInterval> | null = null;
+  /** Pending cleanup after the signalling socket drops (NOT a hang-up). */
+  private socketLossTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+  /** Pending ICE-recovery attempt after the peer reports `disconnected`/`failed`. */
+  private peerRecoveryTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+  private iceRestartAttempts = 0;
 
   readonly phase = signal<CallPhase>('idle');
   readonly activeCall = signal<ActiveCall | null>(null);
@@ -86,11 +99,35 @@ export class CallService {
   /** True while the UI should show a call (ringing, connecting or connected). */
   readonly busy = computed(() => {
     const phase = this.phase();
-    return phase === 'outgoing' || phase === 'incoming' || phase === 'connecting' || phase === 'connected';
+    return (
+      phase === 'outgoing' ||
+      phase === 'incoming' ||
+      phase === 'connecting' ||
+      phase === 'connected' ||
+      phase === 'reconnecting'
+    );
   });
 
   constructor() {
     this.connect();
+    // A hidden tab is not a hang-up. When it becomes visible again, retry the socket and
+    // ICE recovery immediately instead of waiting for throttled background timers.
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => this.onVisibilityChanged());
+    }
+  }
+
+  private onVisibilityChanged(): void {
+    if (document.visibilityState !== 'visible' || !this.busy()) {
+      return;
+    }
+    if (this.socket && !this.socket.connected) {
+      this.socket.connect();
+      return;
+    }
+    if (this.phase() === 'reconnecting') {
+      this.onSocketConnected();
+    }
   }
 
   // --- Connection -----------------------------------------------------------
@@ -116,18 +153,61 @@ export class CallService {
     socket.on('call:signal', (payload: CallSignalEnvelope) => {
       void this.onSignal(payload);
     });
-    socket.on('disconnect', () => {
-      if (this.busy()) {
-        this.finish('call.signallingFailed');
-      }
-    });
+    socket.on('connect', () => this.onSocketConnected());
+    socket.on('disconnect', () => this.onSocketDisconnected());
   }
 
   /** Drop the socket (used on sign-out). Never leaves media running. */
   disconnect(): void {
+    this.clearRecoveryTimers();
     this.socket?.disconnect();
     this.socket = null;
     this.finish(null);
+  }
+
+  /**
+   * The socket came back. A call that was only `reconnecting` must NOT be torn down: the
+   * server kept it during its own grace period, so restore the UI phase and renegotiate
+   * connectivity if the peer connection did not recover by itself.
+   */
+  private onSocketConnected(): void {
+    this.clearSocketLossTimer();
+    if (!this.busy() || this.phase() !== 'reconnecting') {
+      return;
+    }
+
+    const call = this.activeCall();
+    if (this.peer?.connectionState === 'connected') {
+      this.markConnected();
+      return;
+    }
+
+    if (call?.status === 'RINGING') {
+      this.phase.set(call.direction === 'OUTGOING' ? 'outgoing' : 'incoming');
+      return;
+    }
+
+    this.phase.set('connecting');
+    this.schedulePeerRecovery(0);
+  }
+
+  /**
+   * The signalling socket dropped. This is usually a tab switch, OS sleep or Wi-Fi
+   * handover, so it is treated as recoverable until the server's grace period expires.
+   */
+  private onSocketDisconnected(): void {
+    if (!this.busy()) {
+      return;
+    }
+
+    this.phase.set('reconnecting');
+    this.clearSocketLossTimer();
+    const grace = this.config?.disconnectGraceMs ?? STUN_ONLY.disconnectGraceMs ?? 15000;
+    this.socketLossTimer = globalThis.setTimeout(() => {
+      if (this.busy()) {
+        this.finish('call.signallingLost');
+      }
+    }, grace + SOCKET_GRACE_MARGIN_MS);
   }
 
   // --- Outgoing -------------------------------------------------------------
@@ -156,8 +236,10 @@ export class CallService {
       return;
     }
 
+    this.clearRecoveryTimers();
+    this.iceRestartAttempts = 0;
     this.errorKey.set(null);
-    if (!(await this.ensureConfig())) {
+    if (!(await this.ensureConfig(true))) {
       return;
     }
     if (!(await this.acquireMedia(type))) {
@@ -184,6 +266,8 @@ export class CallService {
       return;
     }
     this.clearEndTimer();
+    this.clearRecoveryTimers();
+    this.iceRestartAttempts = 0;
     this.errorKey.set(null);
     this.activeCall.set(call);
     this.phase.set('incoming');
@@ -198,7 +282,7 @@ export class CallService {
       this.finish('call.unsupported');
       return;
     }
-    if (!(await this.ensureConfig()) || !(await this.acquireMedia(call.type))) {
+    if (!(await this.ensureConfig(true)) || !(await this.acquireMedia(call.type))) {
       return;
     }
 
@@ -211,23 +295,29 @@ export class CallService {
 
     // The callee offers: the caller creates its peer connection on the offer.
     await this.createPeerConnection(call);
-    await this.sendOffer(call);
+    if ((await this.sendOffer(call)) === false) {
+      // The server says the call is no longer active (e.g. it expired while we were
+      // reconnecting); do not keep a stale call window open.
+      this.finish('call.ended');
+    }
   }
 
   async reject(): Promise<void> {
     const call = this.activeCall();
-    if (call) {
-      await this.emitAck('call:reject', { callId: call.id });
-    }
+    // Update the UI immediately; the server transition is best-effort (it also expires
+    // unanswered calls on its own). Never leave the dialog stuck on a dead socket.
     this.finish(null);
+    if (call) {
+      void this.emitAck('call:reject', { callId: call.id });
+    }
   }
 
   async hangUp(): Promise<void> {
     const call = this.activeCall();
-    if (call) {
-      await this.emitAck('call:end', { callId: call.id });
-    }
     this.finish(null);
+    if (call) {
+      void this.emitAck('call:end', { callId: call.id });
+    }
   }
 
   // --- Media controls -------------------------------------------------------
@@ -258,15 +348,24 @@ export class CallService {
 
   // --- WebRTC ---------------------------------------------------------------
 
-  private async sendOffer(call: ActiveCall): Promise<void> {
+  /**
+   * Send an SDP offer. Returns `false` only when the server explicitly rejected the
+   * signal (unknown/expired call), `null` when no acknowledgement arrived in time.
+   */
+  private async sendOffer(call: ActiveCall, iceRestart = false): Promise<boolean | null> {
     const peer = this.peer;
     if (!peer) {
       this.finish('call.signallingFailed');
-      return;
+      return false;
     }
-    const offer = await peer.createOffer();
+    const offer = await peer.createOffer(iceRestart ? { iceRestart: true } : undefined);
     await peer.setLocalDescription(offer);
-    await this.emitAck('call:signal', { callId: call.id, kind: 'offer', data: { sdp: peer.localDescription } });
+    const ack = await this.emitAck<{ ok: boolean }>('call:signal', {
+      callId: call.id,
+      kind: 'offer',
+      data: { sdp: peer.localDescription },
+    });
+    return ack ? ack.ok : null;
   }
 
   private async createPeerConnection(call: ActiveCall): Promise<void> {
@@ -302,11 +401,15 @@ export class CallService {
     peer.onconnectionstatechange = () => {
       switch (peer.connectionState) {
         case 'connected':
-          this.phase.set('connected');
-          this.startTicker();
+          this.markConnected();
+          break;
+        case 'disconnected':
+          // Usually transient (network handover). Give ICE a chance to recover instead of
+          // treating it as the user hanging up.
+          this.schedulePeerRecovery(ICE_RESTART_DELAY_MS);
           break;
         case 'failed':
-          this.finish('call.connectionFailed');
+          this.schedulePeerRecovery(0);
           break;
         default:
           break;
@@ -314,9 +417,87 @@ export class CallService {
     };
   }
 
+  /** Mark media as flowing and clear any pending recovery work. */
+  private markConnected(): void {
+    this.clearPeerRecoveryTimer();
+    this.clearSocketLossTimer();
+    this.iceRestartAttempts = 0;
+    this.phase.set('connected');
+    if (this.ticker === null) {
+      this.startTicker();
+    }
+  }
+
+  /**
+   * Schedule an ICE recovery attempt. `disconnected` waits a few seconds first, while
+   * `failed` recovers immediately; repeated failures eventually surface a real error.
+   */
+  private schedulePeerRecovery(delayMs: number): void {
+    if (!this.busy() || this.phase() === 'incoming' || this.peerRecoveryTimer !== null) {
+      return;
+    }
+
+    if (this.phase() !== 'reconnecting') {
+      this.phase.set('reconnecting');
+    }
+
+    this.peerRecoveryTimer = globalThis.setTimeout(() => {
+      this.peerRecoveryTimer = null;
+      void this.attemptIceRestart();
+    }, delayMs);
+  }
+
+  /**
+   * Renegotiate connectivity. The callee is the original offerer in this flow, so it
+   * sends the ICE-restart offer; the caller asks it to do so. Keeping one initiator avoids
+   * offer glare when both sides notice the outage at the same time.
+   */
+  private async attemptIceRestart(): Promise<void> {
+    const call = this.activeCall();
+    const peer = this.peer;
+    if (!call || !peer || !this.busy()) {
+      return;
+    }
+
+    if (peer.connectionState === 'connected') {
+      this.markConnected();
+      return;
+    }
+
+    if (this.iceRestartAttempts >= ICE_RESTART_MAX_ATTEMPTS) {
+      this.finish('call.connectionFailed');
+      return;
+    }
+
+    this.iceRestartAttempts += 1;
+    const isCallee = call.callee.id === this.auth.user()?.id;
+
+    if (isCallee) {
+      if ((await this.sendOffer(call, true)) === false) {
+        this.finish('call.ended');
+        return;
+      }
+    } else {
+      const ack = await this.emitAck<{ ok: boolean }>('call:signal', {
+        callId: call.id,
+        kind: 'restart-request',
+        data: { reason: 'ice-restart' },
+      });
+      if (ack && !ack.ok) {
+        // The server no longer knows this call: it ended while we were offline.
+        this.finish('call.ended');
+        return;
+      }
+    }
+
+    // Give the renegotiation time to complete; a still-broken connection retries (or
+    // fails once the attempt budget is exhausted).
+    this.schedulePeerRecovery(ICE_RESTART_DELAY_MS * 2);
+  }
+
   private async onSignal(envelope: CallSignalEnvelope): Promise<void> {
     const call = this.activeCall();
-    if (!call || envelope.callId !== call.id) {
+    if (!call || envelope.callId !== call.id || !this.busy()) {
       return;
     }
 
@@ -329,6 +510,16 @@ export class CallService {
     }
 
     try {
+      if (envelope.kind === 'restart-request') {
+        // Only the callee (the offerer in this flow) reacts, and only for its own call.
+        if (call.callee.id === this.auth.user()?.id) {
+          if ((await this.sendOffer(call, true)) === false) {
+            this.finish('call.ended');
+          }
+        }
+        return;
+      }
+
       if (envelope.kind === 'offer') {
         this.phase.set('connecting');
         const { sdp } = envelope.data as SdpPayload;
@@ -380,14 +571,21 @@ export class CallService {
 
   // --- Setup helpers --------------------------------------------------------
 
-  private async ensureConfig(): Promise<boolean> {
-    if (this.config) {
+  /**
+   * Load ICE configuration. TURN credentials are short-lived, so each new call refreshes
+   * them; a cached config is kept as a fallback when the refresh request fails.
+   */
+  private async ensureConfig(refresh = false): Promise<boolean> {
+    if (this.config && !refresh) {
       return true;
     }
     try {
       this.config = await firstValueFrom(this.api.getData<CallConfig>('/calls/config'));
       return true;
     } catch {
+      if (this.config) {
+        return true;
+      }
       this.notifications.error('call.signallingFailed');
       return false;
     }
@@ -407,8 +605,11 @@ export class CallService {
       this.cameraOff.set(type !== 'VIDEO');
       return true;
     } catch (error) {
+      const key = mediaErrorKey(error);
       this.phase.set('failed');
-      this.errorKey.set(mediaErrorKey(error));
+      this.errorKey.set(key);
+      // For an outgoing call there is no call window yet, so surface the failure as a toast.
+      this.notifications.error(key);
       return false;
     }
   }
@@ -425,6 +626,7 @@ export class CallService {
 
   /** Terminal state: stop media, close the peer, show a message, then reset. */
   private finish(key: string | null): void {
+    this.clearRecoveryTimers();
     this.peer?.close();
     this.peer = null;
     this.queuedCandidates = [];
@@ -432,6 +634,7 @@ export class CallService {
     this.remoteStream.set(null);
     this.stopTicker();
     this.elapsedSeconds.set(0);
+    this.iceRestartAttempts = 0;
 
     if (key) {
       this.errorKey.set(key);
@@ -449,9 +652,29 @@ export class CallService {
   /** Close the call window and return to idle (also used by the UI's close button). */
   dismiss(): void {
     this.clearEndTimer();
+    this.clearRecoveryTimers();
     this.activeCall.set(null);
     this.errorKey.set(null);
     this.phase.set('idle');
+  }
+
+  private clearSocketLossTimer(): void {
+    if (this.socketLossTimer !== null) {
+      globalThis.clearTimeout(this.socketLossTimer);
+      this.socketLossTimer = null;
+    }
+  }
+
+  private clearPeerRecoveryTimer(): void {
+    if (this.peerRecoveryTimer !== null) {
+      globalThis.clearTimeout(this.peerRecoveryTimer);
+      this.peerRecoveryTimer = null;
+    }
+  }
+
+  private clearRecoveryTimers(): void {
+    this.clearSocketLossTimer();
+    this.clearPeerRecoveryTimer();
   }
 
   private clearEndTimer(): void {

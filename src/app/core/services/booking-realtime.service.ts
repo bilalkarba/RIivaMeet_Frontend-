@@ -3,17 +3,21 @@ import { io, type Socket } from 'socket.io-client';
 import { Subject } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import type { BookingNotification, ChatMessage } from '../models/domain.model';
+import type { BookingNotification, ChatMessage, DeletedChatMessage } from '../models/domain.model';
 
 @Injectable({ providedIn: 'root' })
 export class BookingRealtimeService {
   private socket: Socket | null = null;
   private readonly incoming = new Subject<BookingNotification>();
   private readonly incomingMessages = new Subject<ChatMessage>();
+  private readonly updatedMessages = new Subject<ChatMessage>();
+  private readonly deletedMessages = new Subject<DeletedChatMessage>();
   private readonly connectionFailures = new Subject<void>();
 
   readonly notifications = this.incoming.asObservable();
   readonly messages = this.incomingMessages.asObservable();
+  readonly messageUpdates = this.updatedMessages.asObservable();
+  readonly messageDeletions = this.deletedMessages.asObservable();
   readonly connectionErrors = this.connectionFailures.asObservable();
   readonly connected = signal(false);
 
@@ -32,6 +36,12 @@ export class BookingRealtimeService {
     });
     this.socket.on('message:new', (message: ChatMessage) => {
       this.incomingMessages.next(message);
+    });
+    this.socket.on('message:updated', (message: ChatMessage) => {
+      this.updatedMessages.next(message);
+    });
+    this.socket.on('message:deleted', (message: DeletedChatMessage) => {
+      this.deletedMessages.next(message);
     });
   }
 

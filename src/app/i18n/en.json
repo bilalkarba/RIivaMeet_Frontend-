@@ -73,7 +73,8 @@
     "logout": "Sign out",
     "menu": "Menu",
     "account": "Account",
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "adminVerifications": "Coach verification"
   },
   "languages": {
     "label": "Language",
@@ -339,7 +340,29 @@
     "messageLabel": "Your message",
     "messagePlaceholder": "Write a message…",
     "send": "Send",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "editMessage": "Edit message",
+    "deleteMessage": "Delete message",
+    "saveEdit": "Save",
+    "cancelEdit": "Cancel",
+    "deleteConfirm": "Delete this message? This cannot be undone.",
+    "edited": "Edited",
+    "attachFile": "Attach file",
+    "removeAttachment": "Remove",
+    "openAttachment": "Open",
+    "downloadAttachment": "Download",
+    "attachmentLoading": "Loading image…",
+    "attachmentTooLarge": "This file is empty or exceeds the upload size limit.",
+    "attachmentTypeUnsupported": "Choose a JPEG, PNG, WebP image or PDF file.",
+    "attachmentUnavailable": "File storage is not configured. Please contact support.",
+    "attachmentUploadError": "The attachment could not be uploaded. Your draft is still available.",
+    "attachmentConfigError": "Attachment settings could not be loaded.",
+    "moderation": {
+      "blocked": "This message contains contact details (phone, email or social media) and was not sent. Your text is still in the box — remove the contact details and try again. Keep conversations inside RivaMeet.",
+      "detected": "Contact details are not allowed in messages. Remove the phone number, email address or social-media handle and try again.",
+      "warn": "Your message was sent, but sharing contact details is discouraged. Keep the conversation inside RivaMeet.",
+      "flagged": "Your message was sent. Contact sharing was flagged for review."
+    }
   },
   "auth": {
     "login": {
@@ -419,7 +442,12 @@
       "profile": "Profile",
       "sports": "Sports",
       "availability": "Availability",
-      "requests": "Requests"
+      "requests": "Requests",
+      "verification": "Verification"
+    },
+    "verification": {
+      "profileRequired": "Create your coach profile before submitting documents for verification.",
+      "goToProfile": "Create coach profile"
     },
     "notifications": {
       "title": "Booking alerts",
@@ -505,6 +533,7 @@
     "outgoing": "Calling…",
     "connecting": "Connecting…",
     "connected": "Connected",
+    "reconnecting": "Reconnecting…",
     "accept": "Accept",
     "reject": "Decline",
     "hangUp": "Hang up",
@@ -524,7 +553,8 @@
     "deviceUnavailable": "No microphone or camera was found on this device.",
     "mediaFailed": "Your microphone or camera could not be started.",
     "signallingFailed": "The call service is unavailable. Check your connection and try again.",
-    "connectionFailed": "The call could not be connected."
+    "connectionFailed": "The call could not be connected.",
+    "signallingLost": "The connection was lost for too long and the call ended."
   },
   "errors": {
     "title": "Something went wrong",
@@ -534,6 +564,7 @@
     "detailsTitle": "Technical details",
     "codes": {
       "VALIDATION_ERROR": "Some of the information was not accepted. Check the highlighted fields.",
+      "UNPROCESSABLE_ENTITY": "This message cannot be sent because it violates the conversation policy.",
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "Your account is not allowed to do this.",
       "NOT_FOUND": "We could not find what you asked for.",
@@ -605,5 +636,120 @@
     "rights": "All rights reserved.",
     "builtWith": "Built with Angular and the RivaMeet API.",
     "languageLabel": "Language"
+  },
+  "verification": {
+    "status": {
+      "NOT_SUBMITTED": "Not submitted",
+      "DRAFT": "Draft",
+      "PENDING": "Awaiting review",
+      "IN_REVIEW": "In review",
+      "NEEDS_INFO": "More information needed",
+      "APPROVED": "Verified",
+      "REJECTED": "Rejected"
+    },
+    "statusHelp": {
+      "NOT_SUBMITTED": "Upload your professional diploma or certificate to start the verification process. Clients cannot see or book your profile until an administrator approves it.",
+      "DRAFT": "Your documents are saved but the application is not submitted yet. Check them and submit when you are ready.",
+      "PENDING": "Your application is queued for review. Documents are locked until an administrator makes a decision.",
+      "IN_REVIEW": "An administrator is reviewing your application right now.",
+      "NEEDS_INFO": "The reviewer needs something more from you. Read the feedback, replace or add documents, then resubmit.",
+      "APPROVED": "Your coaching qualification was verified. Your profile becomes discoverable once it also satisfies the publication rules (location and at least one sport).",
+      "REJECTED": "Your application was rejected. Read the reason, correct your documents and resubmit."
+    },
+    "type": {
+      "DIPLOMA": "Diploma",
+      "CERTIFICATION": "Certificate",
+      "OTHER": "Other document"
+    },
+    "required": {
+      "title": "Still required",
+      "types": "Accepted for this requirement: {types}"
+    },
+    "upload": {
+      "title": "Upload a document",
+      "subtitle": "PDF, JPEG or PNG. The file is stored privately and is only visible to you and to the reviewing administrator.",
+      "type": "Document type",
+      "file": "File",
+      "hint": "Maximum 10 MB. Only PDF, JPEG and PNG are accepted.",
+      "selected": "Selected: {name} ({size})",
+      "progress": "Uploading… {percent}%",
+      "uploading": "Uploading…",
+      "action": "Upload document",
+      "done": "Document uploaded and confirmed.",
+      "unsupported": "Only PDF, JPEG and PNG files are accepted."
+    },
+    "documents": {
+      "title": "Your documents",
+      "empty": "No document uploaded yet.",
+      "removed": "Document removed."
+    },
+    "submit": {
+      "action": "Submit for verification",
+      "submitting": "Submitting…",
+      "confirm": "Only an administrator can approve your application. After a decision you can still correct your documents and resubmit.",
+      "done": "Application submitted."
+    },
+    "feedback": {
+      "title": "Reviewer feedback"
+    },
+    "history": {
+      "title": "History"
+    },
+    "events": {
+      "APPLICATION_STARTED": "Application started",
+      "DOCUMENT_UPLOADED": "Document uploaded",
+      "DOCUMENT_REMOVED": "Document removed",
+      "SUBMITTED": "Submitted",
+      "RESUBMITTED": "Resubmitted",
+      "MARKED_IN_REVIEW": "Marked as in review",
+      "INFO_REQUESTED": "More information requested",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    }
+  },
+  "adminVerify": {
+    "title": "Coach verification",
+    "subtitle": "Review submitted documents and make the official decision yourself.",
+    "views": {
+      "applications": "Review queue",
+      "unverified": "Unverified coaches"
+    },
+    "filters": {
+      "status": "Status",
+      "search": "Coach name or email"
+    },
+    "submitted": "Submitted",
+    "notSubmitted": "Not submitted",
+    "documents": "Documents: {count}",
+    "unpublished": "profile unpublished",
+    "emptyQueue": "No application matches these filters.",
+    "emptyUnverified": "No unverified coach found.",
+    "pickCoach": "Select a coach",
+    "pickApplication": "Select an application to review it.",
+    "grandfatherHint": "This coach was published before verification existed. Recording an approval is an explicit, auditable decision.",
+    "grandfather": "Record manual approval",
+    "openDocument": "Open document",
+    "reviewNote": "Reviewer note",
+    "decision": "Decision",
+    "markInReview": "Mark as in review",
+    "markedInReview": "Application marked as in review.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "requestInfo": "Request more information",
+    "noActions": "No decision is available in this state.",
+    "confirm": {
+      "approve": "Approve this coach? The profile becomes discoverable once it is published.",
+      "reject": "Reject this application? The reason is shown to the coach.",
+      "request-info": "Ask the coach for more information?",
+      "grandfather": "Record a manual approval for this coach?"
+    },
+    "note": "Note / reason",
+    "noteHint": "At least 3 characters. Shown to the coach for rejections and information requests.",
+    "done": {
+      "approve": "Coach approved.",
+      "reject": "Application rejected.",
+      "request-info": "Information requested.",
+      "grandfather": "Manual approval recorded."
+    }
   }
 }

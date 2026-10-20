@@ -48,12 +48,23 @@ export interface CallConfig {
   iceServers: RTCIceServer[];
   /** How long the callee has to answer before the API marks the call MISSED. */
   ringTimeoutMs: number;
+  /** How long the server tolerates a dropped socket before ending the call. */
+  disconnectGraceMs?: number;
 }
 
 /** Local UI state machine. */
-export type CallPhase = 'idle' | 'outgoing' | 'incoming' | 'connecting' | 'connected' | 'ended' | 'failed';
+export type CallPhase =
+  | 'idle'
+  | 'outgoing'
+  | 'incoming'
+  | 'connecting'
+  | 'connected'
+  /** Socket or ICE connectivity was lost; recovery is in progress (not a hang-up). */
+  | 'reconnecting'
+  | 'ended'
+  | 'failed';
 
-export type CallSignalKind = 'offer' | 'answer' | 'candidate';
+export type CallSignalKind = 'offer' | 'answer' | 'candidate' | 'restart-request';
 
 /** Socket event envelope for `call:incoming` / `call:accepted` / … */
 export interface CallEnvelope {

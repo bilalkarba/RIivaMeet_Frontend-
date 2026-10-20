@@ -83,6 +83,10 @@ export const environment = {
   root), so it follows the configured host automatically.
 * **No secrets are stored in the frontend.** The only credential the browser holds is the
   JWT access token returned by `/auth/login`, and the API re-verifies it on every request.
+  WebRTC ICE servers (STUN/TURN) are fetched per call from `/calls/config`; short-lived TURN
+  credentials are never compiled into the bundle or written to the environment files.
+  Off-platform contact moderation is mirrored in the chat composer for instant feedback,
+  but every message is re-checked by the backend.
 
 ---
 

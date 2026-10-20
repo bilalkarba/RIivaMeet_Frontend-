@@ -19,7 +19,7 @@ const SPORT_SLUGS = ['fitness', 'boxing', 'swimming', 'football', 'tennis'] as c
     <footer class="footer">
       <div class="shell footer__inner">
         <div class="footer__brand">
-          <app-brand [onDark]="true" [label]="'app.name' | t" />
+          <app-brand [onDark]="true" [label]="'app.name' | t" [imageLogo]="true" />
           <p class="footer__about">{{ 'footer.aboutText' | t }}</p>
           <app-language-selector [onDark]="true" />
         </div>
@@ -27,10 +27,18 @@ const SPORT_SLUGS = ['fitness', 'boxing', 'swimming', 'football', 'tennis'] as c
         <nav class="footer__col" [attr.aria-label]="'footer.exploreTitle' | t">
           <h3 class="footer__heading">{{ 'footer.exploreTitle' | t }}</h3>
           <ul>
-            <li><a routerLink="/">{{ 'nav.home' | t }}</a></li>
-            <li><a routerLink="/coaches">{{ 'nav.coaches' | t }}</a></li>
-            <li><a routerLink="/" fragment="how-it-works">{{ 'nav.howItWorks' | t }}</a></li>
-            <li><a routerLink="/dashboard">{{ 'nav.dashboard' | t }}</a></li>
+            <li>
+              <a routerLink="/">{{ 'nav.home' | t }}</a>
+            </li>
+            <li>
+              <a routerLink="/coaches">{{ 'nav.coaches' | t }}</a>
+            </li>
+            <li>
+              <a routerLink="/" fragment="how-it-works">{{ 'nav.howItWorks' | t }}</a>
+            </li>
+            <li>
+              <a routerLink="/dashboard">{{ 'nav.dashboard' | t }}</a>
+            </li>
           </ul>
         </nav>
 
@@ -51,13 +59,21 @@ const SPORT_SLUGS = ['fitness', 'boxing', 'swimming', 'football', 'tennis'] as c
           <h3 class="footer__heading">{{ 'footer.coachesTitle' | t }}</h3>
           <ul>
             <li>
-              <a routerLink="/register" [queryParams]="{ role: 'COACH' }">{{ 'footer.joinAsCoach' | t }}</a>
+              <a routerLink="/register" [queryParams]="{ role: 'COACH' }">{{
+                'footer.joinAsCoach' | t
+              }}</a>
             </li>
             @if (auth.user(); as user) {
-              <li><a routerLink="/coach/dashboard">{{ 'nav.coachDashboard' | t }}</a></li>
-              <li><span class="footer__muted">{{ user.email }}</span></li>
+              <li>
+                <a routerLink="/coach/dashboard">{{ 'nav.coachDashboard' | t }}</a>
+              </li>
+              <li>
+                <span class="footer__muted">{{ user.email }}</span>
+              </li>
             } @else {
-              <li><a routerLink="/login">{{ 'footer.coachSignIn' | t }}</a></li>
+              <li>
+                <a routerLink="/login">{{ 'footer.coachSignIn' | t }}</a>
+              </li>
             }
             <li>
               <a [href]="apiDocsUrl" target="_blank" rel="noopener noreferrer">
@@ -102,6 +118,12 @@ const SPORT_SLUGS = ['fitness', 'boxing', 'swimming', 'football', 'tennis'] as c
       display: grid;
       grid-template-columns: minmax(220px, 1.4fr) repeat(auto-fit, minmax(160px, 1fr));
       gap: clamp(1.5rem, 1rem + 2.5vw, 3rem);
+    }
+
+    @media (max-width: 27rem) {
+      .footer__inner {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .footer__brand {

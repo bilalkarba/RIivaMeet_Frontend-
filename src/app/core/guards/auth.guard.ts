@@ -38,6 +38,25 @@ export const guestOnlyGuard: CanActivateFn = () => {
 };
 
 /**
+ * Restricts a route to administrators.
+ *
+ * A convenience only: every `/admin/*` API route independently verifies the caller's
+ * role, so this guard shapes the experience and nothing more.
+ */
+export const adminGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+  }
+  if (auth.role() === 'ADMIN') {
+    return true;
+  }
+  return router.createUrlTree([roleHome(auth.role())]);
+};
+
+/**
  * Restricts a route to one role (administrators may always pass).
  * Users with the other role are redirected to their own home area.
  */

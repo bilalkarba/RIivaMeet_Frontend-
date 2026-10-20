@@ -73,7 +73,8 @@
     "logout": "Se déconnecter",
     "menu": "Menu",
     "account": "Compte",
-    "skipToContent": "Aller au contenu principal"
+    "skipToContent": "Aller au contenu principal",
+    "adminVerifications": "Vérification des coachs"
   },
   "languages": {
     "label": "Langue",
@@ -339,7 +340,29 @@
     "messageLabel": "Votre message",
     "messagePlaceholder": "Écrivez un message…",
     "send": "Envoyer",
-    "sending": "Envoi…"
+    "sending": "Envoi…",
+    "editMessage": "Modifier le message",
+    "deleteMessage": "Supprimer le message",
+    "saveEdit": "Enregistrer",
+    "cancelEdit": "Annuler",
+    "deleteConfirm": "Supprimer ce message ? Cette action est irréversible.",
+    "edited": "Modifié",
+    "attachFile": "Joindre un fichier",
+    "removeAttachment": "Retirer",
+    "openAttachment": "Ouvrir",
+    "downloadAttachment": "Télécharger",
+    "attachmentLoading": "Chargement de l’image…",
+    "attachmentTooLarge": "Le fichier est vide ou dépasse la limite de taille.",
+    "attachmentTypeUnsupported": "Choisissez une image JPEG, PNG ou WebP, ou un fichier PDF.",
+    "attachmentUnavailable": "Le stockage des fichiers n’est pas configuré. Contactez l’assistance.",
+    "attachmentUploadError": "La pièce jointe n’a pas pu être envoyée. Votre brouillon est conservé.",
+    "attachmentConfigError": "Impossible de charger les paramètres des pièces jointes.",
+    "moderation": {
+      "blocked": "Ce message contient des coordonnées (téléphone, e-mail ou réseaux sociaux) et n'a pas été envoyé. Votre texte est conservé dans le champ : retirez ces informations puis réessayez. Gardez la conversation sur RivaMeet.",
+      "detected": "Les coordonnées ne sont pas autorisées dans les messages. Retirez le numéro, l'adresse e-mail ou l'identifiant social puis réessayez.",
+      "warn": "Votre message a été envoyé, mais le partage de coordonnées est déconseillé. Gardez la conversation sur RivaMeet.",
+      "flagged": "Votre message a été envoyé. Le partage de coordonnées a été signalé pour vérification."
+    }
   },
   "auth": {
     "login": {
@@ -419,7 +442,12 @@
       "profile": "Profil",
       "sports": "Sports",
       "availability": "Disponibilités",
-      "requests": "Demandes"
+      "requests": "Demandes",
+      "verification": "Vérification"
+    },
+    "verification": {
+      "profileRequired": "Créez votre profil de coach avant d’envoyer des documents pour vérification.",
+      "goToProfile": "Créer un profil de coach"
     },
     "notifications": {
       "title": "Alertes de réservation",
@@ -505,6 +533,7 @@
     "outgoing": "Appel en cours…",
     "connecting": "Connexion…",
     "connected": "En communication",
+    "reconnecting": "Reconnexion…",
     "accept": "Accepter",
     "reject": "Refuser",
     "hangUp": "Raccrocher",
@@ -524,7 +553,8 @@
     "deviceUnavailable": "Aucun micro ni caméra n'a été trouvé sur cet appareil.",
     "mediaFailed": "Votre micro ou votre caméra n'a pas pu démarrer.",
     "signallingFailed": "Le service d'appel est indisponible. Vérifiez votre connexion et réessayez.",
-    "connectionFailed": "L'appel n'a pas pu être établi."
+    "connectionFailed": "L'appel n'a pas pu être établi.",
+    "signallingLost": "La connexion a été perdue trop longtemps ; l'appel est terminé."
   },
   "errors": {
     "title": "Une erreur est survenue",
@@ -534,6 +564,7 @@
     "detailsTitle": "Détails techniques",
     "codes": {
       "VALIDATION_ERROR": "Certaines informations n'ont pas été acceptées. Vérifiez les champs signalés.",
+      "UNPROCESSABLE_ENTITY": "Ce message ne peut pas être envoyé car il enfreint les règles de la conversation.",
       "UNAUTHORIZED": "Vous devez vous connecter pour continuer.",
       "FORBIDDEN": "Votre compte n'est pas autorisé à effectuer cette action.",
       "NOT_FOUND": "Nous n'avons pas trouvé ce que vous demandiez.",
@@ -605,5 +636,120 @@
     "rights": "Tous droits réservés.",
     "builtWith": "Développé avec Angular et l'API RivaMeet.",
     "languageLabel": "Langue"
+  },
+  "verification": {
+    "status": {
+      "NOT_SUBMITTED": "Non soumis",
+      "DRAFT": "Brouillon",
+      "PENDING": "En attente de vérification",
+      "IN_REVIEW": "En cours de vérification",
+      "NEEDS_INFO": "Informations complémentaires requises",
+      "APPROVED": "Vérifié",
+      "REJECTED": "Refusé"
+    },
+    "statusHelp": {
+      "NOT_SUBMITTED": "Téléversez votre diplôme ou certificat professionnel pour lancer la vérification. Les clients ne peuvent ni voir ni réserver votre profil tant qu’un administrateur ne l’a pas approuvé.",
+      "DRAFT": "Vos documents sont enregistrés mais la demande n’est pas encore soumise. Vérifiez-les puis soumettez.",
+      "PENDING": "Votre demande est en file d’attente. Les documents sont verrouillés jusqu’à la décision d’un administrateur.",
+      "IN_REVIEW": "Un administrateur examine votre demande en ce moment.",
+      "NEEDS_INFO": "Le vérificateur a besoin d’un complément. Lisez le retour, remplacez ou ajoutez des documents, puis resoumettez.",
+      "APPROVED": "Votre qualification a été vérifiée. Votre profil devient visible dès qu’il remplit aussi les conditions de publication (localisation et au moins un sport).",
+      "REJECTED": "Votre demande a été refusée. Lisez le motif, corrigez vos documents puis resoumettez."
+    },
+    "type": {
+      "DIPLOMA": "Diplôme",
+      "CERTIFICATION": "Certificat",
+      "OTHER": "Autre document"
+    },
+    "required": {
+      "title": "Encore requis",
+      "types": "Accepté pour cette exigence : {types}"
+    },
+    "upload": {
+      "title": "Téléverser un document",
+      "subtitle": "PDF, JPEG ou PNG. Le fichier est stocké en privé et n’est visible que par vous et l’administrateur qui vérifie.",
+      "type": "Type de document",
+      "file": "Fichier",
+      "hint": "10 Mo maximum. Seuls les PDF, JPEG et PNG sont acceptés.",
+      "selected": "Sélectionné : {name} ({size})",
+      "progress": "Téléversement… {percent} %",
+      "uploading": "Téléversement…",
+      "action": "Téléverser le document",
+      "done": "Document téléversé et confirmé.",
+      "unsupported": "Seuls les fichiers PDF, JPEG et PNG sont acceptés."
+    },
+    "documents": {
+      "title": "Vos documents",
+      "empty": "Aucun document téléversé pour le moment.",
+      "removed": "Document supprimé."
+    },
+    "submit": {
+      "action": "Soumettre pour vérification",
+      "submitting": "Envoi…",
+      "confirm": "Seul un administrateur peut approuver votre demande. Après une décision, vous pouvez toujours corriger vos documents et resoumettez.",
+      "done": "Demande soumise."
+    },
+    "feedback": {
+      "title": "Retour du vérificateur"
+    },
+    "history": {
+      "title": "Historique"
+    },
+    "events": {
+      "APPLICATION_STARTED": "Demande créée",
+      "DOCUMENT_UPLOADED": "Document téléversé",
+      "DOCUMENT_REMOVED": "Document supprimé",
+      "SUBMITTED": "Soumise",
+      "RESUBMITTED": "Soumise à nouveau",
+      "MARKED_IN_REVIEW": "Marquée en vérification",
+      "INFO_REQUESTED": "Complément demandé",
+      "APPROVED": "Approuvée",
+      "REJECTED": "Refusée"
+    }
+  },
+  "adminVerify": {
+    "title": "Vérification des coachs",
+    "subtitle": "Examinez les documents soumis et prenez vous-même la décision officielle.",
+    "views": {
+      "applications": "File de vérification",
+      "unverified": "Coachs non vérifiés"
+    },
+    "filters": {
+      "status": "Statut",
+      "search": "Nom ou e-mail du coach"
+    },
+    "submitted": "Soumise le",
+    "notSubmitted": "Non soumise",
+    "documents": "Documents : {count}",
+    "unpublished": "profil non publié",
+    "emptyQueue": "Aucune demande ne correspond à ces filtres.",
+    "emptyUnverified": "Aucun coach non vérifié.",
+    "pickCoach": "Sélectionnez un coach",
+    "pickApplication": "Sélectionnez une demande pour l’examiner.",
+    "grandfatherHint": "Ce coach a été publié avant la mise en place de la vérification. Enregistrer une approbation est une décision explicite et traçable.",
+    "grandfather": "Enregistrer une approbation manuelle",
+    "openDocument": "Ouvrir le document",
+    "reviewNote": "Note du vérificateur",
+    "decision": "Décision",
+    "markInReview": "Marquer en vérification",
+    "markedInReview": "Demande marquée en vérification.",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "requestInfo": "Demander un complément",
+    "noActions": "Aucune décision possible dans cet état.",
+    "confirm": {
+      "approve": "Approuver ce coach ? Le profil devient visible dès qu’il est publié.",
+      "reject": "Refuser cette demande ? Le motif sera montré au coach.",
+      "request-info": "Demander un complément au coach ?",
+      "grandfather": "Enregistrer une approbation manuelle pour ce coach ?"
+    },
+    "note": "Note / motif",
+    "noteHint": "Au moins 3 caractères. Affiché au coach pour les refus et les demandes de complément.",
+    "done": {
+      "approve": "Coach approuvé.",
+      "reject": "Demande refusée.",
+      "request-info": "Complément demandé.",
+      "grandfather": "Approbation manuelle enregistrée."
+    }
   }
 }

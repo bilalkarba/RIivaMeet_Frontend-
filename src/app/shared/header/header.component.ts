@@ -51,7 +51,7 @@ const NAV_LINKS: readonly NavLink[] = [
   template: `
     <header class="header">
       <div class="shell header__inner">
-        <app-brand [onDark]="darkChrome()" [label]="'app.name' | t" />
+        <app-brand [onDark]="darkChrome()" [label]="'app.name' | t" [imageLogo]="true" />
 
         <nav class="header__nav" [attr.aria-label]="'nav.menu' | t">
           <ul>
@@ -92,20 +92,49 @@ const NAV_LINKS: readonly NavLink[] = [
                   <p class="account__meta">
                     <span class="account__meta-label">{{ 'auth.signedInAs' | t }}</span>
                     <span class="account__meta-value">{{ user.email }}</span>
-                    <span class="chip chip--neutral">{{ locale.enumLabel('role', user.role) }}</span>
+                    <span class="chip chip--neutral">{{
+                      locale.enumLabel('role', user.role)
+                    }}</span>
                   </p>
 
-                  <a class="account__item" role="menuitem" routerLink="/dashboard" (click)="closeMenus()">
+                  <a
+                    class="account__item"
+                    role="menuitem"
+                    routerLink="/dashboard"
+                    (click)="closeMenus()"
+                  >
                     <app-icon name="calendar" [size]="17" />
                     {{ 'nav.dashboard' | t }}
                   </a>
+                  @if (auth.role() === 'ADMIN') {
+                    <a
+                      class="account__item"
+                      role="menuitem"
+                      routerLink="/admin/verifications"
+                      (click)="closeMenus()"
+                    >
+                      <app-icon name="shield" [size]="17" />
+                      {{ 'nav.adminVerifications' | t }}
+                    </a>
+                  }
                   @if (auth.isCoach()) {
-                    <a class="account__item" role="menuitem" routerLink="/coach/dashboard" (click)="closeMenus()">
+                    <a
+                      class="account__item"
+                      role="menuitem"
+                      routerLink="/coach/dashboard"
+                      (click)="closeMenus()"
+                    >
                       <app-icon name="dashboard" [size]="17" />
                       {{ 'nav.coachDashboard' | t }}
                     </a>
                   } @else {
-                    <a class="account__item" role="menuitem" routerLink="/register" [queryParams]="{ role: 'COACH' }" (click)="closeMenus()">
+                    <a
+                      class="account__item"
+                      role="menuitem"
+                      routerLink="/register"
+                      [queryParams]="{ role: 'COACH' }"
+                      (click)="closeMenus()"
+                    >
                       <app-icon name="sparkles" [size]="17" />
                       {{ 'nav.forCoaches' | t }}
                     </a>
@@ -113,7 +142,12 @@ const NAV_LINKS: readonly NavLink[] = [
 
                   <span class="account__divider" role="separator"></span>
 
-                  <button type="button" class="account__item account__item--danger" role="menuitem" (click)="logout()">
+                  <button
+                    type="button"
+                    class="account__item account__item--danger"
+                    role="menuitem"
+                    (click)="logout()"
+                  >
                     <app-icon name="log-out" [size]="17" />
                     {{ 'nav.logout' | t }}
                   </button>
@@ -159,11 +193,19 @@ const NAV_LINKS: readonly NavLink[] = [
 
             <div class="header__mobile-actions">
               @if (auth.user(); as user) {
-                <a class="btn btn--outline btn--block" routerLink="/dashboard" (click)="closeMenus()">
+                <a
+                  class="btn btn--outline btn--block"
+                  routerLink="/dashboard"
+                  (click)="closeMenus()"
+                >
                   {{ 'nav.dashboard' | t }}
                 </a>
                 @if (auth.isCoach()) {
-                  <a class="btn btn--outline btn--block" routerLink="/coach/dashboard" (click)="closeMenus()">
+                  <a
+                    class="btn btn--outline btn--block"
+                    routerLink="/coach/dashboard"
+                    (click)="closeMenus()"
+                  >
                     {{ 'nav.coachDashboard' | t }}
                   </a>
                 }
@@ -174,7 +216,11 @@ const NAV_LINKS: readonly NavLink[] = [
                 <a class="btn btn--outline btn--block" routerLink="/login" (click)="closeMenus()">
                   {{ 'nav.login' | t }}
                 </a>
-                <a class="btn btn--primary btn--block" routerLink="/register" (click)="closeMenus()">
+                <a
+                  class="btn btn--primary btn--block"
+                  routerLink="/register"
+                  (click)="closeMenus()"
+                >
                   {{ 'nav.register' | t }}
                 </a>
               }

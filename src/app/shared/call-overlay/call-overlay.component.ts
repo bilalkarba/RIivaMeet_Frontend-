@@ -245,6 +245,8 @@ export class CallOverlayComponent {
         return 'call.outgoing';
       case 'connecting':
         return 'call.connecting';
+      case 'reconnecting':
+        return 'call.reconnecting';
       case 'connected':
         return 'call.connected';
       default:

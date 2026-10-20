@@ -32,11 +32,12 @@ import { SportsService } from '../../core/services/sports.service';
 import { NotificationService } from '../../core/ui/notification.service';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { BookingListComponent } from '../dashboard/booking-list.component';
+import { CoachVerificationPanelComponent } from './coach-verification-panel.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { sportIcon } from '../../shared/media';
 import { StatePanelComponent } from '../../shared/state-panel/state-panel.component';
 
-type StudioTab = 'profile' | 'sports' | 'availability' | 'requests';
+type StudioTab = 'profile' | 'sports' | 'availability' | 'verification' | 'requests';
 
 /** Optional text field: only validated when the user actually typed something. */
 const optionalMinLength =
@@ -110,6 +111,7 @@ function defaultWindow(): { startAt: string; endAt: string } {
     IconComponent,
     AvatarComponent,
     BookingListComponent,
+    CoachVerificationPanelComponent,
     StatePanelComponent,
   ],
   templateUrl: './coach-dashboard-page.component.html',
@@ -125,7 +127,13 @@ export class CoachDashboardPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly notifications = inject(NotificationService);
 
-  protected readonly tabs: readonly StudioTab[] = ['profile', 'sports', 'availability', 'requests'];
+  protected readonly tabs: readonly StudioTab[] = [
+    'profile',
+    'sports',
+    'availability',
+    'verification',
+    'requests',
+  ];
   protected readonly levels = EXPERIENCE_LEVELS;
   protected readonly tab = signal<StudioTab>('profile');
   protected readonly bookingAlerts = signal<BookingNotification[]>([]);

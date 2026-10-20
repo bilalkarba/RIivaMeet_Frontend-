@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestOnlyGuard, roleGuard } from './core/guards/auth.guard';
+import { adminGuard, authGuard, guestOnlyGuard, roleGuard } from './core/guards/auth.guard';
 import { SiteLayoutComponent } from './layouts/site-layout/site-layout.component';
 
 /**
@@ -77,6 +77,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/coach-studio/coach-dashboard-page.component').then(
             (m) => m.CoachDashboardPageComponent,
+          ),
+      },
+      {
+        path: 'admin/verifications',
+        title: 'nav.adminVerifications',
+        canActivate: [authGuard, adminGuard],
+        loadComponent: () =>
+          import('./features/admin-verifications/admin-verifications-page.component').then(
+            (m) => m.AdminVerificationsPageComponent,
           ),
       },
       {

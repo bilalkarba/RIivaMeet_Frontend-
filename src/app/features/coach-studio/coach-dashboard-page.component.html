@@ -389,6 +389,21 @@
         </div>
       }
 
+      <!-- ============ Verification ============ -->
+      @if (tab() === 'verification') {
+        @if (hasProfile()) {
+          <app-coach-verification-panel />
+        } @else {
+          <section class="card card--pad stack stack-3" role="tabpanel" id="panel-verification" aria-labelledby="tab-verification">
+            <h2 class="studio__panel-title">{{ 'coachDash.profile.createTitle' | t }}</h2>
+            <p class="muted">{{ 'coachDash.verification.profileRequired' | t }}</p>
+            <button type="button" class="btn btn--primary" (click)="setTab('profile')">
+              {{ 'coachDash.verification.goToProfile' | t }}
+            </button>
+          </section>
+        }
+      }
+
       <!-- ============ Requests ============ -->
       @if (tab() === 'requests') {
         <div class="studio__panel" role="tabpanel" id="panel-requests" aria-labelledby="tab-requests">

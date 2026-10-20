@@ -16,7 +16,7 @@ export const environment = {
    */
   enableMockFallback: true,
   /** Default UI language. Arabic is the product default. */
-  defaultLanguage: 'fr',
+  defaultLanguage: 'ar',
   /** Show development helpers (demo-account shortcuts) in the UI. */
   showDevHints: true,
 };
